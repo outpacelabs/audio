@@ -18,6 +18,24 @@ import {
 	turn,
 	type Voice,
 } from "@outpacelabs/audio";
+import {
+	ArrowDownIcon,
+	ArrowUpIcon,
+	CheckIcon,
+	DotIcon,
+	ClipboardIcon,
+	CopyIcon,
+	Cross2Icon,
+	CursorArrowIcon,
+	DotFilledIcon,
+	DoubleArrowLeftIcon,
+	DoubleArrowRightIcon,
+	EnterFullScreenIcon,
+	EnterIcon,
+	ExitFullScreenIcon,
+	ExitIcon,
+	TrashIcon,
+} from "@radix-ui/react-icons";
 import { useSmoothCorners } from "@outpacelabs/smooth/react";
 import { motion, useReducedMotion } from "motion/react";
 import {
@@ -167,26 +185,33 @@ function SpecViz({ spec }: { spec: SoundSpec }) {
 	);
 }
 
+type TileIcon = React.ComponentType<{
+	width?: number;
+	height?: number;
+	className?: string;
+	"aria-hidden"?: boolean | "true" | "false";
+}>;
+
 function soundsFor(
 	voice?: Voice,
-): { label: string; glyph: string; spec: SoundSpec; play: () => void }[] {
+): { label: string; icon: TileIcon; spec: SoundSpec; play: () => void }[] {
 	return [
-		{ label: "tap", glyph: "·", spec: specs.tap(voice), play: tap },
-		{ label: "nudge up", glyph: "↑", spec: specs.nudge("up", voice), play: () => nudge("up") },
-		{ label: "nudge down", glyph: "↓", spec: specs.nudge("down", voice), play: () => nudge("down") },
-		{ label: "toggle on", glyph: "●", spec: specs.toggle("on", voice), play: () => toggle("on") },
-		{ label: "toggle off", glyph: "○", spec: specs.toggle("off", voice), play: () => toggle("off") },
-		{ label: "slide in", glyph: "→", spec: specs.slide("in", voice), play: () => slide("in") },
-		{ label: "slide out", glyph: "←", spec: specs.slide("out", voice), play: () => slide("out") },
-		{ label: "turn forward", glyph: "»", spec: specs.turn("forward", voice), play: () => turn("forward") },
-		{ label: "turn back", glyph: "«", spec: specs.turn("back", voice), play: () => turn("back") },
-		{ label: "open", glyph: "◱", spec: specs.open(voice), play: openSound },
-		{ label: "close", glyph: "◳", spec: specs.close(voice), play: closeSound },
-		{ label: "copy", glyph: "⧉", spec: specs.copy(voice), play: copySound },
-		{ label: "paste", glyph: "⎘", spec: specs.paste(voice), play: pasteSound },
-		{ label: "confirm", glyph: "✓", spec: specs.confirm(voice), play: confirm },
-		{ label: "deny", glyph: "✕", spec: specs.deny(voice), play: deny },
-		{ label: "remove", glyph: "⌫", spec: specs.remove(voice), play: removeSound },
+		{ label: "tap", icon: CursorArrowIcon, spec: specs.tap(voice), play: tap },
+		{ label: "nudge up", icon: ArrowUpIcon, spec: specs.nudge("up", voice), play: () => nudge("up") },
+		{ label: "nudge down", icon: ArrowDownIcon, spec: specs.nudge("down", voice), play: () => nudge("down") },
+		{ label: "toggle on", icon: DotFilledIcon, spec: specs.toggle("on", voice), play: () => toggle("on") },
+		{ label: "toggle off", icon: DotIcon, spec: specs.toggle("off", voice), play: () => toggle("off") },
+		{ label: "slide in", icon: EnterIcon, spec: specs.slide("in", voice), play: () => slide("in") },
+		{ label: "slide out", icon: ExitIcon, spec: specs.slide("out", voice), play: () => slide("out") },
+		{ label: "turn forward", icon: DoubleArrowRightIcon, spec: specs.turn("forward", voice), play: () => turn("forward") },
+		{ label: "turn back", icon: DoubleArrowLeftIcon, spec: specs.turn("back", voice), play: () => turn("back") },
+		{ label: "open", icon: EnterFullScreenIcon, spec: specs.open(voice), play: openSound },
+		{ label: "close", icon: ExitFullScreenIcon, spec: specs.close(voice), play: closeSound },
+		{ label: "copy", icon: CopyIcon, spec: specs.copy(voice), play: copySound },
+		{ label: "paste", icon: ClipboardIcon, spec: specs.paste(voice), play: pasteSound },
+		{ label: "confirm", icon: CheckIcon, spec: specs.confirm(voice), play: confirm },
+		{ label: "deny", icon: Cross2Icon, spec: specs.deny(voice), play: deny },
+		{ label: "remove", icon: TrashIcon, spec: specs.remove(voice), play: removeSound },
 	];
 }
 
@@ -196,7 +221,12 @@ function SoundTile({
 	sound,
 	reduced,
 }: {
-	sound: { label: string; glyph: string; spec: SoundSpec; play: () => void };
+	sound: {
+		label: string;
+		icon: TileIcon;
+		spec: SoundSpec;
+		play: () => void;
+	};
 	reduced: boolean;
 }) {
 	const ref = useSmoothCorners<HTMLButtonElement>(16, 60, { press: 100 });
@@ -212,12 +242,12 @@ function SoundTile({
 				<span className="font-mono text-[13px] text-(--ink)">
 					{sound.label}
 				</span>
-				<span
+				<sound.icon
 					aria-hidden="true"
-					className="font-mono text-[13px] text-(--muted)"
-				>
-					{sound.glyph}
-				</span>
+					width={14}
+					height={14}
+					className="shrink-0 self-center text-(--muted)"
+				/>
 			</div>
 			<SpecViz spec={sound.spec} />
 			<span className="font-mono text-[11px] tabular-nums text-(--muted)">
