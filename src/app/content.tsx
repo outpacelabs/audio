@@ -17,7 +17,13 @@ import {
 import { useAudioSettings } from "@outpacelabs/audio/react";
 import { useSmoothCorners } from "@outpacelabs/squircle/react";
 import { motion, useReducedMotion } from "motion/react";
-import { type CSSProperties, type ReactNode, useEffect, useState } from "react";
+import {
+	type CSSProperties,
+	type ReactNode,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { useScrollSpy } from "./use-scroll-spy";
 
 /* ── entrance tokens (shared duration/curve; sequence via delays only) ── */
@@ -302,6 +308,7 @@ export function AudioContent({
 	const { enabled, volume, setEnabled, setVolume } = useAudioSettings();
 	const [seed, setSeed] = useState("");
 	const settingsRef = useSmoothCorners<HTMLDivElement>(16);
+	const volumeTick = useRef(0);
 	const [installCopied, setInstallCopied] = useState(false);
 	const voice = seed ? voiceFor(seed) : undefined;
 	useEffect(() => {
@@ -336,6 +343,7 @@ export function AudioContent({
 					href="https://github.com/outpacelabs/audio"
 					target="_blank"
 					rel="noopener noreferrer"
+					onClick={() => tap()}
 					className="inline-flex items-center gap-1.5 rounded-full bg-(--chip) py-2.5 pl-3 pr-3.5 text-sm font-[550] leading-none text-(--ink) transition hover:bg-[rgba(23,23,23,0.08)] motion-safe:active:scale-[0.97]"
 				>
 					<GithubMark />
@@ -402,7 +410,18 @@ export function AudioContent({
 						<input
 							type="checkbox"
 							checked={enabled}
-							onChange={(e) => setEnabled(e.target.checked)}
+							onChange={(e) => {
+								const on = e.target.checked;
+								if (on) {
+									setEnabled(true);
+									toggle("on");
+								} else {
+									// Scheduled before the switch lands, so off gets the
+									// last word.
+									toggle("off");
+									setEnabled(false);
+								}
+							}}
 						/>
 						sound
 					</label>
@@ -413,7 +432,18 @@ export function AudioContent({
 							min={0}
 							max={100}
 							value={Math.round(volume * 100)}
-							onChange={(e) => setVolume(+e.target.value / 100)}
+							onChange={(e) => {
+								const v = +e.target.value / 100;
+								const rising = v > volume;
+								setVolume(v);
+								// Detent blips at the new level: you hear the volume
+								// you are setting. Throttled so a drag ticks.
+								const now = performance.now();
+								if (now - volumeTick.current > 90) {
+									volumeTick.current = now;
+									nudge(rising ? "up" : "down");
+								}
+							}}
 							className="max-w-64 flex-1"
 						/>
 						<output className="w-12 text-right font-mono text-[13px] tabular-nums text-(--ink)">
