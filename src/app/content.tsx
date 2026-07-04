@@ -175,11 +175,11 @@ function soundsFor(
 /* ── table of contents (glass, right gutter) ── */
 const TOC: { id: string; label: string }[] = [
 	{ id: "playground", label: "Playground" },
-	{ id: "direction", label: "Sound is a direction" },
-	{ id: "data", label: "Sounds as data" },
+	{ id: "direction", label: "One gesture, reversed" },
+	{ id: "data", label: "Design as data" },
 	{ id: "voice", label: "A voice from a seed" },
-	{ id: "synthesis", label: "The synthesis" },
-	{ id: "restraint", label: "Restraint" },
+	{ id: "synthesis", label: "Noise and tone" },
+	{ id: "restraint", label: "Quiet by default" },
 ];
 
 const TOC_ITEM_H = 28;
@@ -310,9 +310,9 @@ export function AudioContent({
 					Interface sounds with a sense of direction
 				</h1>
 				<p className="max-w-[520px] text-sm leading-[1.72] tracking-[0.1px] text-(--body) text-pretty">
-					Six tiny sounds, synthesized at runtime from pure data. Mirrored
-					pairs whose pitch direction agrees with the semantic one: up and
-					down, on and off, in and out, yes and no.
+					Interfaces move in directions; these sounds do too. Six moves under
+					180 milliseconds, synthesized at runtime from pure data, in
+					mirrored pairs: up and down, on and off, in and out, yes and no.
 				</p>
 				<button
 					type="button"
@@ -414,46 +414,45 @@ export function AudioContent({
 				<main>
 					<section id="direction" style={SECTION}>
 						<Col>
-							<H2>Sound is a direction</H2>
+							<H2>One gesture, played forward or reversed</H2>
 							<P>
 								Interfaces already speak in directions. Panels slide in and
 								out, values step up and down, switches flip on and off, flows
-								end in yes or no. The sound system mirrors that: every pair is
-								one gesture played forward or reversed. Rising pitch opens,
-								affirms, increases; falling pitch closes, dismisses, declines.
-								You learn the language once, and every sound after that is a
-								cognate.
+								end in yes or no. The sounds mirror that grammar: every pair
+								is a single gesture, played forward or reversed. Rising pitch
+								opens, affirms, increases. Falling pitch closes, dismisses,
+								declines. Learn one sound and you have learned its opposite.
 							</P>
 							<P>
-								Just as important is when to stay silent. Sound earns its
-								place at confirmations and at errors, the moments a user must
-								not miss. It has no business on hover, on keystrokes, or on
-								anything that fires ten times a second; feedback that frequent
-								belongs to the pointer, not the ear.
+								Just as designed is the silence. Sound earns its place at
+								confirmations and at errors, the moments a user must not miss,
+								and nowhere else. Nothing on hover. Nothing on keystrokes.
+								Anything that fires ten times a second belongs to the pointer,
+								not the ear.
 							</P>
 						</Col>
 					</section>
 
 					<section id="data" style={SECTION}>
 						<Col>
-							<H2>Sounds as data</H2>
+							<H2>The sound design is data</H2>
 							<P>
-								There are no audio files here. Every sound is a spec: a few
-								numbers describing tones and noise bursts, their frequency
-								glides, start offsets, durations, and peak levels. Pure
+								There isn&apos;t an audio file in this library. A sound is a
+								spec: a handful of numbers naming tones and noise bursts,
+								where they start, how they glide, how loud they peak. Pure
 								functions produce the specs; a small interpreter schedules
-								them onto Web Audio nodes. The waveform drawings in the
-								playground are rendered from the same data the engine plays.
+								them onto Web Audio nodes. The drawings in the playground
+								aren&apos;t illustrations of the sounds. They are renderings
+								of the same data the engine plays.
 							</P>
 							<Code html={highlighted.spec} />
 							<P>
-								Data has properties, and properties can be tested. The suite
-								asserts the whole sound design in Node, without an
-								AudioContext: every sound ends within 180ms, every mirrored
-								pair actually reverses its direction, the tap stays true
-								percussion (5 to 15ms of bandpass-filtered noise), and deny
-								sits low and soft. The design cannot drift without a test
-								going red.
+								Data has properties, and properties can be held to. The test
+								suite runs the whole sound design in Node, no AudioContext
+								anywhere: every sound ends inside 180 milliseconds, every
+								mirrored pair actually reverses, the tap stays true
+								percussion, deny stays low and soft. The design cannot drift
+								without a test going red.
 							</P>
 							<Code html={highlighted.usage} />
 						</Col>
@@ -463,60 +462,60 @@ export function AudioContent({
 						<Col>
 							<H2>A voice from a seed</H2>
 							<P>
-								Our avatars engine derives a deterministic gradient from any
-								seed. The same idea works for sound. <C>setVoice(seed)</C>{" "}
-								hashes any string or number into a voice: a register shift of
-								a few semitones, a timbre (sine or triangle), a brightness for
-								the percussive filters, and a pace. The whole sound set
-								re-renders in that voice, so a product can own its own sound
-								the way it owns a color, and two products built on this
-								library will not sound like each other.
+								Our avatars engine turns any seed into a gradient no other
+								seed produces. The same move works on sound.{" "}
+								<C>setVoice(seed)</C> hashes any string or number into a
+								voice: a register a few semitones up or down, a timbre, a
+								brightness for the percussion, a pace. The whole set
+								re-renders in it. A product can own its sound the way it owns
+								a color, and two products built on this library will not
+								sound like each other.
 							</P>
 							<P>
 								A voice changes how the sounds speak, never what they say.
-								The property tests sample a hundred seeded voices and assert
-								every invariant on each one: pairs still mirror, the tap is
-								still percussion, deny still sits low and soft, nothing
-								exceeds 180ms. Try it in the playground: type a seed and the
-								drawings redraw as the sounds retune.
+								The property tests sample a hundred seeded voices and hold
+								every invariant against each one: pairs still mirror, the tap
+								is still percussion, deny still sits low, nothing runs long.
+								Type a seed in the playground and watch the drawings redraw as
+								the set retunes.
 							</P>
 						</Col>
 					</section>
 
 					<section id="synthesis" style={SECTION}>
 						<Col>
-							<H2>The synthesis</H2>
+							<H2>Noise for touch, tone for meaning</H2>
 							<P>
-								Two voices cover everything. Percussive moments are filtered
-								noise: white noise through a resonant bandpass reads as a
-								physical tick, and sweeping that filter turns the tick into
-								air moving in or out. Tonal moments are plain oscillators,
-								sine and triangle only, in a consonant register around C5 so
-								neighboring sounds never clash.
+								Percussive moments are filtered noise: white noise through a
+								resonant bandpass reads as a physical tick, and sweeping the
+								filter turns the tick into air moving in or out. Tonal moments
+								are bare oscillators, sine and triangle only, in a consonant
+								register so neighboring sounds never argue. That is the entire
+								palette. Two sources, six sounds.
 							</P>
 							<Code html={highlighted.envelope} />
 							<P>
-								Envelopes are exponential ramps down to 0.001, never to zero.
-								An exponential cannot reach zero, and a ramp that tries clicks
+								Envelopes ramp exponentially down to 0.001 and never to zero;
+								an exponential cannot reach zero, and a ramp that tries clicks
 								audibly at the end. One AudioContext serves the whole app,
 								created lazily inside the first user gesture so autoplay
-								policies stay satisfied, resumed when the browser suspends it;
-								every node disconnects itself when its sound ends.
+								policy stays satisfied, resumed when the browser suspends it.
+								Every node disconnects itself when its sound ends.
 							</P>
 						</Col>
 					</section>
 
 					<section id="restraint" style={SECTION}>
 						<Col>
-							<H2>Restraint</H2>
+							<H2>Quiet by default</H2>
 							<P>
-								The master volume defaults to a subtle 0.3. Sound can be
-								disabled globally with one call, the preference persists in{" "}
-								<C>localStorage</C>, and users who ask the OS for reduced
-								motion get silence by default. Failure informs rather than
-								punishes: deny is one low, bending tone, not a buzzer. The
-								user already knows something went wrong; the sound only has to
-								say it, quietly.
+								The master volume defaults to 0.3. One call disables
+								everything, the preference persists in <C>localStorage</C>,
+								and anyone who asks the OS for reduced motion gets silence
+								without asking twice. Failure informs rather than punishes:
+								deny is one low tone bending downward, not a buzzer. The user
+								already knows something went wrong. The sound only has to say
+								it, quietly.
 							</P>
 							<div className="h-14" />
 						</Col>
