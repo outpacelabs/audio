@@ -79,7 +79,7 @@ function Col({ children }: { children: ReactNode }) {
 	const reduced = useReducedMotion() ?? false;
 	return (
 		<motion.div
-			style={{ maxWidth: 640, margin: "0 auto", padding: "0 24px" }}
+			style={{ maxWidth: 640, margin: "0 auto" }}
 			initial={reduced ? false : { opacity: 0, y: 12 }}
 			whileInView={{ opacity: 1, y: 0 }}
 			viewport={{ once: true, margin: "0px 0px -64px 0px" }}
@@ -323,13 +323,13 @@ export function AudioContent({
 	});
 
 	return (
-		<div className="flex min-h-screen flex-col items-center px-4 pb-24 pt-3">
+		<div className="flex min-h-screen flex-col items-center px-6 pb-24 pt-3">
 			{/* Shiki blocks: our flat surface owns the background. */}
 			<style>{`.article-code .shiki{margin:0;padding:16px 18px;overflow-x:auto;line-height:1.65;background:transparent !important;font-family:var(--font-mono);font-size:13px}
 .article-code .shiki code{font-family:inherit;background:transparent;padding:0}`}</style>
 
 			{/* Header — brand mark left, GitHub pill right (glass nav type). */}
-			<header className="sticky top-4 z-10 flex w-full items-center justify-between rounded-[10px] bg-white/80 px-2 backdrop-blur-[12px]">
+			<header className="sticky top-4 z-10 flex w-full items-center justify-between rounded-[10px] bg-white/80 backdrop-blur-[12px]">
 				<a
 					href="https://outpacestudios.com"
 					target="_blank"
@@ -353,7 +353,7 @@ export function AudioContent({
 
 			{/* Hero */}
 			<motion.div
-				className="flex flex-col items-center gap-3 px-4 pb-12 pt-14 text-center sm:pt-20"
+				className="flex flex-col items-center gap-3 pb-12 pt-14 text-center sm:pt-20"
 				{...reveal(0)}
 			>
 				<h1 className="text-2xl font-[550] leading-[1.2] tracking-[-0.4px] text-(--ink) text-balance">
