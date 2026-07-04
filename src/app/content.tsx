@@ -15,6 +15,7 @@ import {
 	voiceFor,
 } from "@outpacelabs/audio";
 import { useAudioSettings } from "@outpacelabs/audio/react";
+import { useSmoothCorners } from "@outpacelabs/squircle/react";
 import { motion, useReducedMotion } from "motion/react";
 import { type CSSProperties, type ReactNode, useEffect, useState } from "react";
 import { useScrollSpy } from "./use-scroll-spy";
@@ -109,8 +110,10 @@ function C({ children }: { children: ReactNode }) {
 
 /* Borderless code surface with server-rendered Shiki highlighting. */
 function Code({ html }: { html: string }) {
+	const smoothRef = useSmoothCorners<HTMLDivElement>(16);
 	return (
 		<div
+			ref={smoothRef}
 			className="article-code mt-[22px] overflow-hidden rounded-[16px] bg-(--surface)"
 			// biome-ignore lint/security/noDangerouslySetInnerHtml: server-generated Shiki HTML
 			dangerouslySetInnerHTML={{ __html: html }}
@@ -170,6 +173,43 @@ function soundsFor(
 		{ label: "confirm", glyph: "✓", spec: specs.confirm(voice), play: confirm },
 		{ label: "deny", glyph: "✕", spec: specs.deny(voice), play: deny },
 	];
+}
+
+/* One playground tile: smoothed corners that soften while pressed, so the
+   corner gives exactly when the sound plays. */
+function SoundTile({
+	sound,
+	reduced,
+}: {
+	sound: { label: string; glyph: string; spec: SoundSpec; play: () => void };
+	reduced: boolean;
+}) {
+	const ref = useSmoothCorners<HTMLButtonElement>(16, 60, { press: 100 });
+	return (
+		<motion.button
+			ref={ref}
+			type="button"
+			onClick={sound.play}
+			whileTap={reduced ? undefined : { scale: 0.97 }}
+			className="flex flex-col items-start gap-4 rounded-[16px] bg-(--surface) p-5 text-left transition-colors hover:bg-[rgba(23,23,23,0.07)]"
+		>
+			<div className="flex w-full items-baseline justify-between">
+				<span className="font-mono text-[13px] text-(--ink)">
+					{sound.label}
+				</span>
+				<span
+					aria-hidden="true"
+					className="font-mono text-[13px] text-(--muted)"
+				>
+					{sound.glyph}
+				</span>
+			</div>
+			<SpecViz spec={sound.spec} />
+			<span className="font-mono text-[11px] tabular-nums text-(--muted)">
+				{Math.round(duration(sound.spec) * 1000)}ms
+			</span>
+		</motion.button>
+	);
 }
 
 /* ── table of contents (glass, right gutter) ── */
@@ -261,6 +301,8 @@ export function AudioContent({
 	const reduced = useReducedMotion() ?? false;
 	const { enabled, volume, setEnabled, setVolume } = useAudioSettings();
 	const [seed, setSeed] = useState("");
+	const settingsRef = useSmoothCorners<HTMLDivElement>(16);
+	const [installCopied, setInstallCopied] = useState(false);
 	const voice = seed ? voiceFor(seed) : undefined;
 	useEffect(() => {
 		setVoice(seed || null);
@@ -317,13 +359,20 @@ export function AudioContent({
 				<button
 					type="button"
 					title="Copy install command"
+					aria-live="polite"
 					onClick={() => {
-						void navigator.clipboard?.writeText("pnpm add @outpacelabs/audio");
+						void navigator.clipboard
+							?.writeText("pnpm add @outpacelabs/audio")
+							.then(() => {
+								confirm();
+								setInstallCopied(true);
+								window.setTimeout(() => setInstallCopied(false), 1400);
+							});
 					}}
 					className="mt-3 flex h-12 items-center gap-3 rounded-full bg-(--chip) px-5 transition hover:bg-[rgba(23,23,23,0.08)] motion-safe:active:scale-[0.98]"
 				>
-					<span className="select-none font-mono text-[13px] leading-5 text-(--muted)">
-						$
+					<span className="w-3 select-none font-mono text-[13px] leading-5 text-(--muted)">
+						{installCopied ? "✓" : "$"}
 					</span>
 					<span className="font-mono text-[13px] leading-5 text-(--ink)">
 						pnpm add @outpacelabs/audio
@@ -340,34 +389,15 @@ export function AudioContent({
 			>
 				<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
 					{sounds.map((s) => (
-						<motion.button
-							key={s.label}
-							type="button"
-							onClick={s.play}
-							whileTap={reduced ? undefined : { scale: 0.97 }}
-							className="flex flex-col items-start gap-4 rounded-[16px] bg-(--surface) p-5 text-left transition-colors hover:bg-[rgba(23,23,23,0.07)]"
-						>
-							<div className="flex w-full items-baseline justify-between">
-								<span className="font-mono text-[13px] text-(--ink)">
-									{s.label}
-								</span>
-								<span
-									aria-hidden="true"
-									className="font-mono text-[13px] text-(--muted)"
-								>
-									{s.glyph}
-								</span>
-							</div>
-							<SpecViz spec={s.spec} />
-							<span className="font-mono text-[11px] tabular-nums text-(--muted)">
-								{Math.round(duration(s.spec) * 1000)}ms
-							</span>
-						</motion.button>
+						<SoundTile key={s.label} sound={s} reduced={reduced} />
 					))}
 				</div>
 
 				{/* Settings */}
-				<div className="mt-2 flex flex-wrap items-center gap-x-8 gap-y-4 rounded-[16px] bg-(--surface) px-5 py-4">
+				<div
+					ref={settingsRef}
+					className="mt-2 flex flex-wrap items-center gap-x-8 gap-y-4 rounded-[16px] bg-(--surface) px-5 py-4"
+				>
 					<label className="flex cursor-pointer select-none items-center gap-2.5 text-sm text-(--muted)">
 						<input
 							type="checkbox"

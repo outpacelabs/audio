@@ -12,6 +12,7 @@
 	},
 	"dependencies": {
 		"@outpacelabs/audio": "workspace:*",
+		"@outpacelabs/squircle": "github:outpacelabs/smooth#path:packages/squircle",
 		"geist": "^1.7.2",
 		"motion": "^12.38.0",
 		"next": "16.2.6",
