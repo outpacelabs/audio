@@ -16,8 +16,34 @@ const DESCRIPTION =
 	"Tiny procedural UI sounds, synthesized at runtime from pure data specs. Mirrored pairs whose pitch direction agrees with the semantic one: up and down, on and off, in and out, confirm and deny. Free and open source by Outpace Studios.";
 
 export const metadata: Metadata = {
+	metadataBase: new URL("https://audio.outpacestudios.com"),
 	title: TITLE,
 	description: DESCRIPTION,
+	alternates: { canonical: "/" },
+	openGraph: {
+		type: "website",
+		locale: "en_US",
+		url: "https://audio.outpacestudios.com",
+		siteName: "@outpacelabs/audio",
+		title: TITLE,
+		description: DESCRIPTION,
+		images: [
+			{
+				url: "/og.jpg",
+				width: 1200,
+				height: 630,
+				alt: "@outpacelabs/audio, by Outpace Studios",
+			},
+		],
+	},
+	twitter: {
+		card: "summary_large_image",
+		title: TITLE,
+		description: DESCRIPTION,
+		images: ["/og.jpg"],
+		site: "@outpacestudios",
+		creator: "@outpacestudios",
+	},
 	applicationName: "@outpacelabs/audio",
 	authors: [{ name: "Outpace Studios", url: "https://outpacestudios.com" }],
 	creator: "Outpace Studios",
