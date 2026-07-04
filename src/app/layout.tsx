@@ -13,7 +13,7 @@ const inter = Inter({
 
 const TITLE = "Audio | Interface sounds with a sense of direction";
 const DESCRIPTION =
-	"Tiny procedural UI sounds, synthesized at runtime from pure data specs. Mirrored pairs whose pitch direction agrees with the semantic one: up and down, on and off, in and out, confirm and deny. Free and open source by Outpace Studios.";
+	"Tiny procedural UI sounds, synthesized at runtime from pure data specs. Mirrored pairs whose acoustic direction agrees with the semantic one: up and down, on and off, in and out, copy and paste, page turns, confirm and deny. Free and open source by Outpace Studios.";
 
 export const metadata: Metadata = {
 	metadataBase: new URL("https://audio.outpacestudios.com"),

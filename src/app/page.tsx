@@ -6,11 +6,13 @@ import { AudioContent } from "./content";
 const SNIPPETS = {
 	usage: {
 		lang: "tsx",
-		code: `import { confirm, deny, nudge, toggle } from "@outpacelabs/audio";
+		code: `import { confirm, copy, deny, nudge, turn } from "@outpacelabs/audio";
 
 <Switch onChange={(on) => toggle(on ? "on" : "off")} />
 <Stepper onStep={(direction) => nudge(direction)} />
 
+navigator.clipboard.writeText(text).then(copy);
+router.push(next).then(() => turn("forward"));
 form.submit().then(confirm).catch(deny);`,
 	},
 	spec: {

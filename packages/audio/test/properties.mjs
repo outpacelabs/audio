@@ -27,8 +27,15 @@ const all = [
 	specs.toggle("off"),
 	specs.slide("in"),
 	specs.slide("out"),
+	specs.turn("forward"),
+	specs.turn("back"),
+	specs.open(),
+	specs.close(),
+	specs.copy(),
+	specs.paste(),
 	specs.confirm(),
 	specs.deny(),
+	specs.remove(),
 ];
 
 // Restraint: short and under clipping, for every sound.
@@ -83,6 +90,43 @@ for (const spec of all) {
 		slideIn.from === slideOut.to && slideIn.to === slideOut.from,
 	);
 
+	const fwd = specs.turn("forward").layers;
+	const back = specs.turn("back").layers;
+	const fwdAir = fwd.find((l) => l.kind === "noise");
+	const backAir = back.find((l) => l.kind === "noise");
+	const fwdLanding = fwd.find((l) => l.kind === "fm");
+	const backLanding = back.find((l) => l.kind === "fm");
+	check("turn · forward air sweeps up", fwdAir.to > fwdAir.from);
+	check("turn · back air sweeps down", backAir.to < backAir.from);
+	check("turn · air mirrors", fwdAir.from === backAir.to && fwdAir.to === backAir.from);
+	check("turn · lands after the air starts", fwdLanding.at > fwdAir.at);
+	check("turn · back lands lower than forward", backLanding.from < fwdLanding.from);
+	check("turn · landing is low register (≤ 250Hz)", fwdLanding.from <= 250 && backLanding.from <= 250);
+
+	const openBody = specs.open().layers.find((l) => l.kind === "fm");
+	const closeBody = specs.close().layers.find((l) => l.kind === "fm");
+	const openAir = specs.open().layers.find((l) => l.kind === "noise");
+	const closeAir = specs.close().layers.find((l) => l.kind === "noise");
+	check("open · glides up", openBody.to > openBody.from);
+	check("close · glides down", closeBody.to < closeBody.from);
+	check("open/close · strike mirrors", openBody.from === closeBody.to && openBody.to === closeBody.from);
+	check("open/close · air mirrors", openAir.from === closeAir.to && openAir.to === closeAir.from);
+
+	const copyStrikes = specs.copy().layers.filter((l) => l.kind === "fm");
+	const pasteStrikes = specs.paste().layers.filter((l) => l.kind === "fm");
+	check("copy · two strikes of the same pitch", copyStrikes.length === 2 && copyStrikes[0].from === copyStrikes[1].from);
+	check("copy · echo is quieter", copyStrikes[1].peak < copyStrikes[0].peak);
+	check("copy · echo is duller", copyStrikes[1].index < copyStrikes[0].index);
+	check("paste · ghost first, full strike second", pasteStrikes[0].peak < pasteStrikes[1].peak && pasteStrikes[0].index < pasteStrikes[1].index);
+	check(
+		"copy/paste · same two strikes, reversed order",
+		copyStrikes[0].index === pasteStrikes[1].index && copyStrikes[1].index === pasteStrikes[0].index && copyStrikes[0].from === pasteStrikes[0].from,
+	);
+	const copyContact = specs.copy().layers.find((l) => l.kind === "noise");
+	const pasteContact = specs.paste().layers.find((l) => l.kind === "noise");
+	check("copy · contact rides the original", copyContact.at < copyStrikes[1].at);
+	check("paste · contact rides the landing", pasteContact.at > pasteStrikes[0].at);
+
 	const [confirmBody] = specs.confirm().layers.filter((l) => l.kind === "fm");
 	check("confirm · inflection rises", confirmBody.to > confirmBody.from);
 	const [denyBody] = specs.deny().layers;
@@ -101,6 +145,18 @@ for (const spec of all) {
 	check("deny · not loud", denyBody.peak <= 0.6);
 }
 
+// Remove is final, not punitive: short, low, dull, and distinct from deny.
+{
+	const removeBody = specs.remove().layers.find((l) => l.kind === "fm");
+	const [denyBody] = specs.deny().layers;
+	check("remove · bends down", removeBody.to < removeBody.from);
+	check("remove · low register (under 300Hz)", removeBody.from <= 300);
+	check("remove · dull material (index ≤ 2)", removeBody.index <= 2);
+	check("remove · shorter than deny", duration(specs.remove()) < duration(specs.deny()));
+	check("remove · sits above deny (completion, not refusal)", removeBody.from > denyBody.from);
+	check("remove · material fixed against voices", removeBody.fixed === true);
+}
+
 // The instrument is consistent: struck bodies share the house material and
 // stay in a sane brightness range.
 {
@@ -113,7 +169,7 @@ for (const spec of all) {
 		}
 	}
 	check("instrument · material ratio and index in range", ok);
-	const bodies = [specs.nudge("up"), specs.toggle("on"), specs.confirm()]
+	const bodies = [specs.nudge("up"), specs.toggle("on"), specs.turn("forward"), specs.open(), specs.copy(), specs.confirm()]
 		.flatMap((s) => s.layers)
 		.filter((l) => l.kind === "fm");
 	check(
@@ -128,6 +184,8 @@ for (const [name, make] of [
 	["nudge up", () => specs.nudge("up")],
 	["toggle off", () => specs.toggle("off")],
 	["confirm", () => specs.confirm()],
+	["copy", () => specs.copy()],
+	["turn forward", () => specs.turn("forward")],
 ]) {
 	check(`${name} · deterministic`, JSON.stringify(make()) === JSON.stringify(make()));
 }
@@ -157,8 +215,15 @@ for (const [name, make] of [
 			specs.toggle("off", v),
 			specs.slide("in", v),
 			specs.slide("out", v),
+			specs.turn("forward", v),
+			specs.turn("back", v),
+			specs.open(v),
+			specs.close(v),
+			specs.copy(v),
+			specs.paste(v),
 			specs.confirm(v),
 			specs.deny(v),
+			specs.remove(v),
 		];
 		for (const spec of voicedAll) {
 			if (duration(spec) > 0.18) allHold = false;
@@ -177,6 +242,19 @@ for (const [name, make] of [
 		const on = specs.toggle("on", v).layers;
 		const off = specs.toggle("off", v).layers;
 		if (!(on[1].from > on[0].from && off[1].from < off[0].from)) allHold = false;
+
+		const fwdV = specs.turn("forward", v).layers.find((l) => l.kind === "noise");
+		const backV = specs.turn("back", v).layers.find((l) => l.kind === "noise");
+		if (!(fwdV.to > fwdV.from && backV.to < backV.from)) allHold = false;
+		const openV = specs.open(v).layers.find((l) => l.kind === "fm");
+		const closeV = specs.close(v).layers.find((l) => l.kind === "fm");
+		if (!(openV.to > openV.from && closeV.to < closeV.from)) allHold = false;
+		const copyV = specs.copy(v).layers.filter((l) => l.kind === "fm");
+		if (!(copyV[1].peak < copyV[0].peak && copyV[1].index < copyV[0].index)) allHold = false;
+
+		// remove stays low and dull in every voice (fixed material).
+		const removeV = specs.remove(v).layers.find((l) => l.kind === "fm");
+		if (!(removeV.from <= 470 && removeV.index <= 2 && removeV.to < removeV.from)) allHold = false;
 
 		// deny stays low and dull in every voice (fixed material).
 		const [denyBody] = specs.deny(v).layers;

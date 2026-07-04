@@ -12,7 +12,7 @@
  * the touch itself) and a body (a two-operator FM tone at a slightly
  * inharmonic ratio, the material ringing). The FM index decays with the
  * strike, so the brightness dies the way a struck object's does. One
- * material, six gestures; that consistency is the identity.
+ * material, every gesture; that consistency is the identity.
  *
  * THE GRAMMAR is direction. Sounds come in mirrored pairs, and the
  * acoustic direction always agrees with the semantic one: pitch and
@@ -84,6 +84,7 @@ export interface SoundSpec {
 export type VerticalDirection = "up" | "down";
 export type ToggleState = "on" | "off";
 export type SpatialDirection = "in" | "out";
+export type PageDirection = "forward" | "back";
 
 /** Total length of a spec in seconds. */
 export function duration(spec: SoundSpec): number {
@@ -257,8 +258,130 @@ export function deny(voice?: Voice): SoundSpec {
 	);
 }
 
+/**
+ * turn — a page switch, not just motion. Air first (the page in flight),
+ * then a soft low strike as the new page lands. Forward sweeps up and lands
+ * on a low G; back sweeps down and lands a step lower, the way returning
+ * settles.
+ */
+export function turn(direction: PageDirection, voice?: Voice): SoundSpec {
+	const [from, to] = direction === "forward" ? [1200, 2400] : [2400, 1200];
+	const landing = direction === "forward" ? 196 : 175;
+	return voiced(
+		{
+			name: `turn-${direction}`,
+			layers: [
+				{ kind: "noise", from, to, q: 2.5, at: 0, duration: 0.055, peak: 0.28 },
+				{ kind: "fm", from: landing, to: landing, ratio: MATERIAL, index: 2, at: 0.06, duration: 0.05, peak: 0.4 },
+			],
+		},
+		voice,
+	);
+}
+
+/**
+ * open — an overlay arriving on the z-axis (modal, menu, popover). One
+ * strike gliding up a fourth with a bloom of air underneath it; where slide
+ * is pure motion past you, open comes toward you.
+ */
+export function open(voice?: Voice): SoundSpec {
+	return voiced(
+		{
+			name: "open",
+			layers: [
+				{ kind: "fm", from: 392, to: 523, ratio: MATERIAL, index: 3.5, at: 0, duration: 0.08, peak: 0.45 },
+				{ kind: "noise", from: 1400, to: 2800, q: 2, at: 0, duration: 0.06, peak: 0.14 },
+			],
+		},
+		voice,
+	);
+}
+
+/** close — open's mirror: the same strike gliding back down, air receding. */
+export function close(voice?: Voice): SoundSpec {
+	return voiced(
+		{
+			name: "close",
+			layers: [
+				{ kind: "fm", from: 523, to: 392, ratio: MATERIAL, index: 3.5, at: 0, duration: 0.08, peak: 0.45 },
+				{ kind: "noise", from: 2800, to: 1400, q: 2, at: 0, duration: 0.06, peak: 0.14 },
+			],
+		},
+		voice,
+	);
+}
+
+/**
+ * copy — the original and its duplicate. One full strike, then the same
+ * strike again as an echo: quieter and duller, a copy of the first. The
+ * metaphor is the mechanism.
+ */
+export function copy(voice?: Voice): SoundSpec {
+	return voiced(
+		{
+			name: "copy",
+			layers: [
+				{ kind: "noise", from: 4000, to: 4000, q: 3, at: 0, duration: 0.006, peak: 0.3 },
+				{ kind: "fm", from: 620, to: 620, ratio: MATERIAL, index: 3, at: 0.004, duration: 0.04, peak: 0.5 },
+				{ kind: "fm", from: 620, to: 620, ratio: MATERIAL, index: 1.4, at: 0.075, duration: 0.045, peak: 0.24 },
+			],
+		},
+		voice,
+	);
+}
+
+/**
+ * paste — copy played in reverse. The ghost arrives first, then lands as
+ * the full strike, contact and all, the moment it becomes real in the
+ * document.
+ */
+export function paste(voice?: Voice): SoundSpec {
+	return voiced(
+		{
+			name: "paste",
+			layers: [
+				{ kind: "fm", from: 620, to: 620, ratio: MATERIAL, index: 1.4, at: 0, duration: 0.04, peak: 0.24 },
+				{ kind: "noise", from: 4000, to: 4000, q: 3, at: 0.07, duration: 0.006, peak: 0.3 },
+				{ kind: "fm", from: 620, to: 620, ratio: MATERIAL, index: 3, at: 0.074, duration: 0.05, peak: 0.5 },
+			],
+		},
+		voice,
+	);
+}
+
+/**
+ * remove — something destroyed on purpose. A short dead strike, higher and
+ * drier than deny: not a refusal, a completion. Fixed so no voice brightens
+ * it; deletion sounds final everywhere.
+ */
+export function remove(voice?: Voice): SoundSpec {
+	return voiced(
+		{
+			name: "remove",
+			layers: [
+				{ kind: "fm", from: 233, to: 208, ratio: MATERIAL, index: 1.6, fixed: true, at: 0, duration: 0.06, peak: 0.45 },
+				{ kind: "noise", from: 1100, to: 1100, q: 2, at: 0, duration: 0.008, peak: 0.2 },
+			],
+		},
+		voice,
+	);
+}
+
 /** Every spec generator, for enumeration (docs, tests, the playground). */
-export const specs = { tap, nudge, toggle, slide, confirm, deny };
+export const specs = {
+	tap,
+	nudge,
+	toggle,
+	slide,
+	turn,
+	open,
+	close,
+	copy,
+	paste,
+	confirm,
+	deny,
+	remove,
+};
 
 /* Kept for API stability; the instrument's own anchors live above. */
 export const REGISTER = { G4, C5, E5, G5 };

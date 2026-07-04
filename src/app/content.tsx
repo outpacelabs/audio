@@ -1,16 +1,22 @@
 "use client";
 
 import {
+	close as closeSound,
 	confirm,
+	copy as copySound,
 	deny,
 	duration,
 	nudge,
+	open as openSound,
+	paste as pasteSound,
+	remove as removeSound,
 	setVoice,
 	type SoundSpec,
 	slide,
 	specs,
 	tap,
 	toggle,
+	turn,
 	type Voice,
 	voiceFor,
 } from "@outpacelabs/audio";
@@ -176,8 +182,15 @@ function soundsFor(
 		{ label: "toggle off", glyph: "○", spec: specs.toggle("off", voice), play: () => toggle("off") },
 		{ label: "slide in", glyph: "→", spec: specs.slide("in", voice), play: () => slide("in") },
 		{ label: "slide out", glyph: "←", spec: specs.slide("out", voice), play: () => slide("out") },
+		{ label: "turn forward", glyph: "»", spec: specs.turn("forward", voice), play: () => turn("forward") },
+		{ label: "turn back", glyph: "«", spec: specs.turn("back", voice), play: () => turn("back") },
+		{ label: "open", glyph: "◱", spec: specs.open(voice), play: openSound },
+		{ label: "close", glyph: "◳", spec: specs.close(voice), play: closeSound },
+		{ label: "copy", glyph: "⧉", spec: specs.copy(voice), play: copySound },
+		{ label: "paste", glyph: "⎘", spec: specs.paste(voice), play: pasteSound },
 		{ label: "confirm", glyph: "✓", spec: specs.confirm(voice), play: confirm },
 		{ label: "deny", glyph: "✕", spec: specs.deny(voice), play: deny },
+		{ label: "remove", glyph: "⌫", spec: specs.remove(voice), play: removeSound },
 	];
 }
 
@@ -372,7 +385,7 @@ export function AudioContent({
 						void navigator.clipboard
 							?.writeText("pnpm add @outpacelabs/audio")
 							.then(() => {
-								confirm();
+								copySound();
 								setInstallCopied(true);
 								window.setTimeout(() => setInstallCopied(false), 1400);
 							});
@@ -480,6 +493,17 @@ export function AudioContent({
 								is a single gesture, played forward or reversed. Rising pitch
 								opens, affirms, increases. Falling pitch closes, dismisses,
 								declines. Learn one sound and you have learned its opposite.
+							</P>
+							<P>
+								Some states ask for more than a direction, and there the
+								gesture itself carries the meaning. A copy is a strike
+								followed by its own echo, quieter and duller: the duplicate.
+								Paste is the same pair reversed, the ghost arriving first and
+								landing as the real thing. A page turn is air in the
+								direction of travel, then a soft low landing on the new page.
+								Open and close trade the same glide up and down a fourth. And
+								remove is a single dead strike, shorter and drier than deny,
+								because deletion is a completion, not a refusal.
 							</P>
 							<P>
 								Just as designed is the silence. Sound earns its place at

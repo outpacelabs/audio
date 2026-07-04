@@ -6,13 +6,15 @@
 
 ---
 
-Six tiny sounds, all under 180ms, synthesized at runtime from pure data
-specs. No audio files, no network. Every sound is a strike of the same
-instrument: a noise contact plus a struck FM body at a slightly inharmonic
-ratio, so the set sounds like one object being touched six ways. The
-grammar is direction: mirrored pairs whose pitch and brightness agree with
-the semantics. Rising opens, affirms, increases; falling closes,
-dismisses, declines.
+Fifteen tiny sounds, all under 180ms, synthesized at runtime from pure
+data specs. No audio files, no network. Every sound is a strike of the
+same instrument: a noise contact plus a struck FM body at a slightly
+inharmonic ratio, so the set sounds like one object being touched
+different ways. The grammar is direction: mirrored pairs whose pitch and
+brightness agree with the semantics. Rising opens, affirms, increases;
+falling closes, dismisses, declines. Where a state asks for more than a
+direction, the gesture carries the meaning: copy is a strike plus its own
+echo, paste the same pair reversed, a page turn is air plus a landing.
 
 ## Install
 
@@ -26,14 +28,21 @@ Zero dependencies. `react >= 18` is an optional peer, only needed for the
 ## Usage
 
 ```tsx
-import { tap, nudge, toggle, slide, confirm, deny } from "@outpacelabs/audio";
+import {
+  tap, nudge, toggle, slide, turn, open, close, copy, paste, confirm, deny, remove,
+} from "@outpacelabs/audio";
 
 tap();                 // neutral percussive click
 nudge("up");           // one step of an adjustment; "down" mirrors it
 toggle("on");          // binary state change; "off" reverses the interval
 slide("in");           // something entering the stage; "out" leaves it
+turn("forward");       // a page switch: air, then a soft landing; "back" mirrors it
+open();                // an overlay arriving on the z-axis; close() is its mirror
+copy();                // a strike and its echo: the duplicate
+paste();               // copy reversed: the ghost lands as the real thing
 confirm();             // an outcome worth marking: a strike that lifts
 deny();                // something didn't happen: a dead strike, no buzzer
+remove();              // something destroyed on purpose: short, dry, final
 ```
 
 Call them from event handlers. The shared AudioContext is created lazily on
