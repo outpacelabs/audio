@@ -7,10 +7,12 @@
 ---
 
 Six tiny sounds, all under 180ms, synthesized at runtime from pure data
-specs. No audio files, no network. The design system is direction: sounds
-come in mirrored pairs whose pitch direction agrees with the semantic one.
-Rising pitch opens, affirms, increases; falling pitch closes, dismisses,
-declines.
+specs. No audio files, no network. Every sound is a strike of the same
+instrument: a noise contact plus a struck FM body at a slightly inharmonic
+ratio, so the set sounds like one object being touched six ways. The
+grammar is direction: mirrored pairs whose pitch and brightness agree with
+the semantics. Rising opens, affirms, increases; falling closes,
+dismisses, declines.
 
 ## Install
 
@@ -30,8 +32,8 @@ tap();                 // neutral percussive click
 nudge("up");           // one step of an adjustment; "down" mirrors it
 toggle("on");          // binary state change; "off" reverses the interval
 slide("in");           // something entering the stage; "out" leaves it
-confirm();             // an outcome worth marking: a pop with an upward nod
-deny();                // something didn't happen: one low tone, no buzzer
+confirm();             // an outcome worth marking: a strike that lifts
+deny();                // something didn't happen: a dead strike, no buzzer
 ```
 
 Call them from event handlers. The shared AudioContext is created lazily on
@@ -92,11 +94,11 @@ deny sits low and soft.
 import { specs, duration, play } from "@outpacelabs/audio";
 
 specs.nudge("up");
-// { name: "nudge-up", layers: [{ kind: "noise", from: 2600, to: 3400,
-//   q: 3.5, at: 0, duration: 0.035, peak: 0.55 }] }
+// { name: "nudge-up", layers: [{ kind: "fm", from: 500, to: 570,
+//   ratio: 2.76, index: 2.5, at: 0, duration: 0.045, peak: 0.5 }] }
 
 play(specs.confirm());       // specs are playable directly
-duration(specs.confirm());   // 0.074
+duration(specs.confirm());   // 0.089
 ```
 
 ## When to play sound at all

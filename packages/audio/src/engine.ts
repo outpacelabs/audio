@@ -169,6 +169,7 @@ function scheduleLayer(
 	gain.connect(master);
 
 	let source: AudioScheduledSourceNode;
+	const extras: AudioNode[] = [];
 	if (layer.kind === "tone") {
 		const osc = ctx.createOscillator();
 		osc.type = layer.wave;
@@ -178,6 +179,30 @@ function scheduleLayer(
 		}
 		osc.connect(gain);
 		source = osc;
+	} else if (layer.kind === "fm") {
+		// The struck body: modulator → depth → carrier.frequency. Depth
+		// decays across the layer, so the strike's brightness dies the way
+		// a real object's does.
+		const carrier = ctx.createOscillator();
+		carrier.type = "sine";
+		carrier.frequency.setValueAtTime(layer.from, start);
+		if (layer.to !== layer.from) {
+			carrier.frequency.exponentialRampToValueAtTime(layer.to, end);
+		}
+		const mod = ctx.createOscillator();
+		mod.type = "sine";
+		mod.frequency.setValueAtTime(layer.from * layer.ratio, start);
+		const depth = ctx.createGain();
+		const d0 = Math.max(layer.index * layer.from, 1);
+		depth.gain.setValueAtTime(d0, start);
+		depth.gain.exponentialRampToValueAtTime(Math.max(d0 * 0.03, 0.5), end);
+		mod.connect(depth);
+		depth.connect(carrier.frequency);
+		mod.start(start);
+		mod.stop(end + 0.01);
+		carrier.connect(gain);
+		extras.push(mod, depth);
+		source = carrier;
 	} else {
 		const noise = ctx.createBufferSource();
 		noise.buffer = whiteNoise(ctx);
@@ -191,6 +216,7 @@ function scheduleLayer(
 		}
 		noise.connect(filter);
 		filter.connect(gain);
+		extras.push(filter);
 		source = noise;
 	}
 
@@ -198,6 +224,7 @@ function scheduleLayer(
 	source.stop(end + 0.01);
 	source.onended = () => {
 		source.disconnect();
+		for (const n of extras) n.disconnect();
 		gain.disconnect();
 	};
 }

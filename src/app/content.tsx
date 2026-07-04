@@ -156,7 +156,7 @@ function SpecViz({ spec }: { spec: SoundSpec }) {
 					x2={x(l.at + l.duration)}
 					y2={y(l.to)}
 					stroke="#171717"
-					strokeWidth={l.kind === "noise" ? 7 : 2}
+					strokeWidth={l.kind === "noise" ? 7 : l.kind === "fm" ? 3.5 : 2}
 					strokeLinecap="round"
 					opacity={l.kind === "noise" ? l.peak * 0.5 : l.peak + 0.3}
 				/>
@@ -224,7 +224,7 @@ const TOC: { id: string; label: string }[] = [
 	{ id: "direction", label: "One gesture, reversed" },
 	{ id: "data", label: "Design as data" },
 	{ id: "voice", label: "A voice from a seed" },
-	{ id: "synthesis", label: "Noise and tone" },
+	{ id: "synthesis", label: "The instrument" },
 	{ id: "restraint", label: "Quiet by default" },
 ];
 
@@ -542,14 +542,18 @@ export function AudioContent({
 
 					<section id="synthesis" style={SECTION}>
 						<Col>
-							<H2>Noise for touch, tone for meaning</H2>
+							<H2>One instrument, struck six ways</H2>
 							<P>
-								Percussive moments are filtered noise: white noise through a
-								resonant bandpass reads as a physical tick, and sweeping the
-								filter turns the tick into air moving in or out. Tonal moments
-								are bare oscillators, sine and triangle only, in a consonant
-								register so neighboring sounds never argue. That is the entire
-								palette. Two sources, six sounds.
+								Every sound here is the same physical event: a strike. A
+								strike has two parts. The contact is a few milliseconds of
+								filtered noise, the touch itself. The body is a two-operator
+								FM tone at a slightly inharmonic ratio, 2.76, the wood and
+								marimba family; integer ratios ring like organs, this rings
+								like an object. The modulation index decays across each
+								strike, so the brightness dies the way a struck
+								object&apos;s does. Direction lives in where and how the
+								material is hit, never in a melody. A UI sound that sings
+								reads as a jingle.
 							</P>
 							<Code html={highlighted.envelope} />
 							<P>
@@ -571,7 +575,7 @@ export function AudioContent({
 								everything, the preference persists in <C>localStorage</C>,
 								and anyone who asks the OS for reduced motion gets silence
 								without asking twice. Failure informs rather than punishes:
-								deny is one low tone bending downward, not a buzzer. The user
+								deny is a dead strike, low and dull, not a buzzer. The user
 								already knows something went wrong. The sound only has to say
 								it, quietly.
 							</P>

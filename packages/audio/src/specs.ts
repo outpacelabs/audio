@@ -1,15 +1,22 @@
 /**
  * Sound specs: every interface sound as pure data.
  *
- * A sound is a handful of layers — pitched tones and filtered noise bursts —
- * each with a start offset, a duration, and a peak level. Specs are produced
- * by pure functions, so the whole sound design is inspectable, versionable,
- * and testable in Node without an AudioContext; the engine is just a small
- * interpreter that schedules them onto Web Audio nodes.
+ * A sound is a handful of layers, each with a start offset, a duration, and
+ * a peak level. Specs are produced by pure functions, so the whole sound
+ * design is inspectable, versionable, and testable in Node without an
+ * AudioContext; the engine is just a small interpreter that schedules them
+ * onto Web Audio nodes.
  *
- * The design system is DIRECTION. Sounds come in mirrored pairs, and the
- * acoustic direction always agrees with the semantic one: pitch rises for
- * up/on/in/confirm, falls for down/off/out/deny. One family, six moves.
+ * THE INSTRUMENT. Every sound here is the same physical event: a strike.
+ * A strike has two parts, a contact (a few milliseconds of filtered noise,
+ * the touch itself) and a body (a two-operator FM tone at a slightly
+ * inharmonic ratio, the material ringing). The FM index decays with the
+ * strike, so the brightness dies the way a struck object's does. One
+ * material, six gestures; that consistency is the identity.
+ *
+ * THE GRAMMAR is direction. Sounds come in mirrored pairs, and the
+ * acoustic direction always agrees with the semantic one: pitch and
+ * brightness rise for up/on/in/confirm, fall for down/off/out/deny.
  *
  * Restraint rules baked into every spec: nothing longer than 180ms, peaks
  * capped well under clipping, errors inform in a low register instead of
@@ -21,7 +28,7 @@ import { registerRatio, type Voice } from "./voice";
 export interface ToneLayer {
 	kind: "tone";
 	wave: "sine" | "triangle" | "square" | "sawtooth";
-	/** Voices never re-timbre this layer (deny stays sine everywhere). */
+	/** Voices never re-timbre this layer. */
 	fixed?: boolean;
 	/** Start and end frequency in Hz; unequal values glide exponentially. */
 	from: number;
@@ -46,7 +53,28 @@ export interface NoiseLayer {
 	peak: number;
 }
 
-export type Layer = ToneLayer | NoiseLayer;
+/**
+ * A struck body: two-operator FM. `from`/`to` are the carrier in Hz, the
+ * modulator sits at carrier × ratio, and `index` sets how bright the strike
+ * starts (it decays to nearly nothing across the layer, like a real
+ * object's ring darkening).
+ */
+export interface FmLayer {
+	kind: "fm";
+	from: number;
+	to: number;
+	/** Modulator/carrier ratio. Non-integer = inharmonic = material. */
+	ratio: number;
+	/** Initial modulation index; higher strikes brighter. */
+	index: number;
+	/** Voices never re-material this layer (deny stays dull everywhere). */
+	fixed?: boolean;
+	at: number;
+	duration: number;
+	peak: number;
+}
+
+export type Layer = ToneLayer | NoiseLayer | FmLayer;
 
 export interface SoundSpec {
 	name: string;
@@ -62,10 +90,13 @@ export function duration(spec: SoundSpec): number {
 	return spec.layers.reduce((max, l) => Math.max(max, l.at + l.duration), 0);
 }
 
-/* Low anchors: UI sounds inflect, they don't sing. Tonal layers sit in the
- * third/fourth octave; anything melodic-bright reads as a jingle. */
-const G3 = 196;
-const E4 = 329.63;
+/* The house material: slightly inharmonic, in the wood/marimba family.
+ * Integer ratios ring like organs; 2.76 rings like an object. */
+const MATERIAL = 2.76;
+/* What a glassier voice multiplies the ratio by (timbre = material). */
+const GLASS = 1.27;
+
+/* Low anchors: UI sounds inflect, they don't sing. */
 const G4 = 392;
 const C5 = 523.25;
 const E5 = 659.25;
@@ -73,10 +104,10 @@ const G5 = 783.99;
 
 /**
  * Re-render a spec in a voice. Register shifts every pitched layer,
- * brightness moves percussive filters, pace stretches the timing, and
- * melodic layers take the voice's waveform (layers marked fixed keep
- * theirs). Without a voice the spec passes through untouched, so the base
- * sound set is stable byte for byte.
+ * brightness moves percussive filters and FM strike brightness, timbre
+ * picks the material (wood or glass), pace stretches the timing. Layers
+ * marked fixed keep their timbre/material. Without a voice the spec passes
+ * through untouched, so the base sound set is stable byte for byte.
  */
 function voiced(spec: SoundSpec, voice?: Voice): SoundSpec {
 	if (!voice) return spec;
@@ -96,6 +127,18 @@ function voiced(spec: SoundSpec, voice?: Voice): SoundSpec {
 					wave: l.fixed ? l.wave : voice.wave,
 				};
 			}
+			if (l.kind === "fm") {
+				return {
+					...l,
+					at,
+					duration: dur,
+					from: l.from * ratio,
+					to: l.to * ratio,
+					index: l.fixed ? l.index : l.index * voice.brightness,
+					ratio:
+						l.fixed || voice.wave === "sine" ? l.ratio : l.ratio * GLASS,
+				};
+			}
 			return {
 				...l,
 				at,
@@ -108,54 +151,54 @@ function voiced(spec: SoundSpec, voice?: Voice): SoundSpec {
 }
 
 /**
- * tap — the neutral one, no direction. A 10ms bandpass-filtered noise burst:
- * pure percussion, felt more than heard.
+ * tap — the neutral one, no direction. Contact without body: an 8ms
+ * bandpass-filtered noise burst, felt more than heard.
  */
 export function tap(voice?: Voice): SoundSpec {
 	return voiced(
 		{
-		name: "tap",
-		layers: [
-			{ kind: "noise", from: 4200, to: 4200, q: 3, at: 0, duration: 0.01, peak: 0.8 },
-		],
+			name: "tap",
+			layers: [
+				{ kind: "noise", from: 4500, to: 4500, q: 3, at: 0, duration: 0.008, peak: 0.75 },
+			],
 		},
 		voice,
 	);
 }
 
 /**
- * nudge — one small step of an adjustment (stepper, slider detent, keyboard
- * increment). A detent tick: a short noise transient whose filter sweeps
- * brighter for up and duller for down. Mechanical, not melodic.
+ * nudge — one small step of an adjustment (stepper, slider detent,
+ * keyboard increment). One tiny strike of the material with a micro-glide
+ * in the step's direction.
  */
 export function nudge(direction: VerticalDirection, voice?: Voice): SoundSpec {
-	const [from, to] = direction === "up" ? [2600, 3400] : [3400, 2600];
+	const [from, to] = direction === "up" ? [500, 570] : [570, 500];
 	return voiced(
 		{
-		name: `nudge-${direction}`,
-		layers: [
-			{ kind: "noise", from, to, q: 3.5, at: 0, duration: 0.035, peak: 0.55 },
-		],
+			name: `nudge-${direction}`,
+			layers: [
+				{ kind: "fm", from, to, ratio: MATERIAL, index: 2.5, at: 0, duration: 0.045, peak: 0.5 },
+			],
 		},
 		voice,
 	);
 }
 
 /**
- * toggle — a binary state change. A physical click-clack: two short ticks,
- * the second brighter for on and duller for off, with a low body under the
- * second tick so the latch has weight.
+ * toggle — a binary state change. Two strikes, click-clack: the second
+ * lands higher for on and lower for off, with the contact tick riding the
+ * latch.
  */
 export function toggle(state: ToggleState, voice?: Voice): SoundSpec {
-	const [first, second] = state === "on" ? [2200, 3000] : [3000, 2200];
+	const [first, second] = state === "on" ? [330, 440] : [440, 330];
 	return voiced(
 		{
-		name: `toggle-${state}`,
-		layers: [
-			{ kind: "noise", from: first, to: first, q: 3, at: 0, duration: 0.012, peak: 0.5 },
-			{ kind: "noise", from: second, to: second, q: 3, at: 0.05, duration: 0.014, peak: 0.55 },
-			{ kind: "tone", wave: "sine", from: G3, to: G3, at: 0.05, duration: 0.03, peak: 0.22 },
-		],
+			name: `toggle-${state}`,
+			layers: [
+				{ kind: "fm", from: first, to: first, ratio: MATERIAL, index: 3, at: 0, duration: 0.035, peak: 0.48 },
+				{ kind: "fm", from: second, to: second, ratio: MATERIAL, index: 3, at: 0.055, duration: 0.04, peak: 0.52 },
+				{ kind: "noise", from: 2600, to: 2600, q: 3, at: 0.055, duration: 0.008, peak: 0.3 },
+			],
 		},
 		voice,
 	);
@@ -163,16 +206,17 @@ export function toggle(state: ToggleState, voice?: Voice): SoundSpec {
 
 /**
  * slide — something entering or leaving the stage (drawer, sheet, panel).
- * A noise sweep through a rising or falling bandpass: air, not notes.
+ * No strike at all: a noise sweep through a rising or falling bandpass,
+ * air moving in or out.
  */
 export function slide(direction: SpatialDirection, voice?: Voice): SoundSpec {
 	const [from, to] = direction === "in" ? [900, 2600] : [2600, 900];
 	return voiced(
 		{
-		name: `slide-${direction}`,
-		layers: [
-			{ kind: "noise", from, to, q: 2.5, at: 0, duration: 0.07, peak: 0.3 },
-		],
+			name: `slide-${direction}`,
+			layers: [
+				{ kind: "noise", from, to, q: 2.5, at: 0, duration: 0.07, peak: 0.3 },
+			],
 		},
 		voice,
 	);
@@ -180,34 +224,34 @@ export function slide(direction: SpatialDirection, voice?: Voice): SoundSpec {
 
 /**
  * confirm — an outcome worth marking (submitted, saved, copied at the end
- * of a flow). A damped pop: a noise transient with one brief, low tonal
- * inflection rising underneath. An upward nod, not a jingle.
+ * of a flow). One warm strike that lifts as it rings: an upward nod in the
+ * material, not a jingle.
  */
 export function confirm(voice?: Voice): SoundSpec {
 	return voiced(
 		{
-		name: "confirm",
-		layers: [
-			{ kind: "noise", from: 3400, to: 3400, q: 3, at: 0, duration: 0.008, peak: 0.4 },
-			{ kind: "tone", wave: "sine", from: E4, to: G4, at: 0.004, duration: 0.07, peak: 0.4 },
-		],
+			name: "confirm",
+			layers: [
+				{ kind: "noise", from: 3400, to: 3400, q: 3, at: 0, duration: 0.006, peak: 0.35 },
+				{ kind: "fm", from: 330, to: 392, ratio: MATERIAL, index: 4, at: 0.004, duration: 0.085, peak: 0.45 },
+			],
 		},
 		voice,
 	);
 }
 
 /**
- * deny — something didn't happen. A low, damped thud: a soft attack and one
- * low tone bending downward. It informs; it does not punish. No buzzer.
+ * deny — something didn't happen. A dead strike: low carrier, almost no
+ * brightness, bending down as it dies. It informs; it does not punish.
  */
 export function deny(voice?: Voice): SoundSpec {
 	return voiced(
 		{
-		name: "deny",
-		layers: [
-			{ kind: "tone", wave: "sine", fixed: true, from: 196, to: 174.61, at: 0, duration: 0.09, peak: 0.45 },
-			{ kind: "noise", from: 900, to: 900, q: 2, at: 0, duration: 0.01, peak: 0.2 },
-		],
+			name: "deny",
+			layers: [
+				{ kind: "fm", from: 165, to: 147, ratio: MATERIAL, index: 1.2, fixed: true, at: 0, duration: 0.1, peak: 0.45 },
+				{ kind: "noise", from: 700, to: 700, q: 2, at: 0, duration: 0.01, peak: 0.18 },
+			],
 		},
 		voice,
 	);
@@ -216,5 +260,6 @@ export function deny(voice?: Voice): SoundSpec {
 /** Every spec generator, for enumeration (docs, tests, the playground). */
 export const specs = { tap, nudge, toggle, slide, confirm, deny };
 
-/* Referenced by the toggle interval; exported for the article. */
+/* Kept for API stability; the instrument's own anchors live above. */
 export const REGISTER = { G4, C5, E5, G5 };
+export { GLASS, MATERIAL };

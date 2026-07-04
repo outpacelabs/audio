@@ -6,7 +6,9 @@
  *  - the tap is true percussion: 5-15ms, bandpass 3000-6000Hz, Q 2-5
  *  - direction: every mirrored pair reverses its acoustic direction
  *    (nudge glides, toggle intervals, slide sweeps, confirm vs deny)
- *  - deny informs, it does not punish: low register, no square/sawtooth
+ *  - deny informs, it does not punish: low register, dull material
+ *  - the instrument is consistent: every struck body shares the house
+ *    material ratio and a sane brightness index
  *  - determinism: the same call always produces the same spec
  */
 import { duration, specs, voiceFor } from "../dist/index.js";
@@ -81,22 +83,43 @@ for (const spec of all) {
 		slideIn.from === slideOut.to && slideIn.to === slideOut.from,
 	);
 
-	const [confirmTone] = specs.confirm().layers.filter((l) => l.kind === "tone");
-	check("confirm · inflection rises", confirmTone.to > confirmTone.from);
-	const [denyTone] = specs.deny().layers;
-	check("deny · bends down", denyTone.to < denyTone.from);
+	const [confirmBody] = specs.confirm().layers.filter((l) => l.kind === "fm");
+	check("confirm · inflection rises", confirmBody.to > confirmBody.from);
+	const [denyBody] = specs.deny().layers;
+	check("deny · bends down", denyBody.to < denyBody.from);
 	check(
 		"confirm/deny · registers oppose",
-		denyTone.from < confirmTone.from,
+		denyBody.from < confirmBody.from,
 	);
 }
 
 // Deny informs, it does not punish.
 {
-	const [denyTone] = specs.deny().layers;
-	check("deny · low register (under 300Hz)", denyTone.from <= 300);
-	check("deny · soft waveform", denyTone.wave === "sine" || denyTone.wave === "triangle");
-	check("deny · not loud", denyTone.peak <= 0.6);
+	const [denyBody] = specs.deny().layers;
+	check("deny · low register (under 300Hz)", denyBody.from <= 300);
+	check("deny · dull material (index ≤ 2)", denyBody.kind === "fm" && denyBody.index <= 2);
+	check("deny · not loud", denyBody.peak <= 0.6);
+}
+
+// The instrument is consistent: struck bodies share the house material and
+// stay in a sane brightness range.
+{
+	let ok = true;
+	for (const spec of all) {
+		for (const l of spec.layers) {
+			if (l.kind !== "fm") continue;
+			if (!(l.ratio >= 1.5 && l.ratio <= 6)) ok = false;
+			if (!(l.index > 0 && l.index <= 8)) ok = false;
+		}
+	}
+	check("instrument · material ratio and index in range", ok);
+	const bodies = [specs.nudge("up"), specs.toggle("on"), specs.confirm()]
+		.flatMap((s) => s.layers)
+		.filter((l) => l.kind === "fm");
+	check(
+		"instrument · one material across the set",
+		bodies.every((l) => l.ratio === bodies[0].ratio),
+	);
 }
 
 // Determinism.
@@ -155,9 +178,9 @@ for (const [name, make] of [
 		const off = specs.toggle("off", v).layers;
 		if (!(on[1].from > on[0].from && off[1].from < off[0].from)) allHold = false;
 
-		// deny stays low and soft in every voice.
-		const [denyTone] = specs.deny(v).layers;
-		if (!(denyTone.from <= 330 && denyTone.wave === "sine" && denyTone.peak <= 0.6)) allHold = false;
+		// deny stays low and dull in every voice (fixed material).
+		const [denyBody] = specs.deny(v).layers;
+		if (!(denyBody.from <= 330 && denyBody.kind === "fm" && denyBody.index <= 2 && denyBody.peak <= 0.6)) allHold = false;
 	}
 	check("voices · every invariant holds across 100 seeded voices", allHold);
 	check("voices · seeds actually differentiate (>60 distinct of 100)", distinct.size > 60, `${distinct.size}`);
@@ -167,7 +190,7 @@ for (const [name, make] of [
 	);
 	check(
 		"voices · unvoiced specs unchanged (base set is stable)",
-		JSON.stringify(specs.tap()) === JSON.stringify({ name: "tap", layers: [{ kind: "noise", from: 4200, to: 4200, q: 3, at: 0, duration: 0.01, peak: 0.8 }] }),
+		JSON.stringify(specs.tap()) === JSON.stringify({ name: "tap", layers: [{ kind: "noise", from: 4500, to: 4500, q: 3, at: 0, duration: 0.008, peak: 0.75 }] }),
 	);
 }
 
