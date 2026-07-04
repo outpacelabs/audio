@@ -10,7 +10,6 @@ import {
 	open as openSound,
 	paste as pasteSound,
 	remove as removeSound,
-	setVoice,
 	type SoundSpec,
 	slide,
 	specs,
@@ -18,16 +17,13 @@ import {
 	toggle,
 	turn,
 	type Voice,
-	voiceFor,
 } from "@outpacelabs/audio";
-import { useAudioSettings } from "@outpacelabs/audio/react";
-import { useSmoothCorners } from "@outpacelabs/squircle/react";
+import { useSmoothCorners } from "@outpacelabs/smooth/react";
 import { motion, useReducedMotion } from "motion/react";
 import {
 	type CSSProperties,
 	type ReactNode,
 	useEffect,
-	useRef,
 	useState,
 } from "react";
 import { useScrollSpy } from "./use-scroll-spy";
@@ -318,16 +314,16 @@ export function AudioContent({
 	highlighted: Record<string, string>;
 }) {
 	const reduced = useReducedMotion() ?? false;
-	const { enabled, volume, setEnabled, setVolume } = useAudioSettings();
-	const [seed, setSeed] = useState("");
-	const settingsRef = useSmoothCorners<HTMLDivElement>(16);
-	const volumeTick = useRef(0);
-	const [installCopied, setInstallCopied] = useState(false);
-	const voice = seed ? voiceFor(seed) : undefined;
+	const [showTopFade, setShowTopFade] = useState(false);
+
 	useEffect(() => {
-		setVoice(seed || null);
-	}, [seed]);
-	const sounds = soundsFor(voice);
+		const onScroll = () => setShowTopFade(window.scrollY > 50);
+		onScroll();
+		window.addEventListener("scroll", onScroll, { passive: true });
+		return () => window.removeEventListener("scroll", onScroll);
+	}, []);
+	const [installCopied, setInstallCopied] = useState(false);
+	const sounds = soundsFor();
 
 	const reveal = (delay: number) => ({
 		initial: reduced ? false : { opacity: 0, y: 12 },
@@ -337,12 +333,21 @@ export function AudioContent({
 
 	return (
 		<div className="flex min-h-screen flex-col items-center px-6 pb-24 pt-3">
+			{/* Top scroll fade — content slips under white, the header stays. */}
+			<div
+				className={`pointer-events-none fixed inset-x-0 top-0 z-[5] h-[80px] transition-opacity duration-300 ${
+					showTopFade ? "opacity-100" : "opacity-0"
+				}`}
+				style={{
+					background: "linear-gradient(to bottom, #fff 0%, transparent 100%)",
+				}}
+			/>
 			{/* Shiki blocks: our flat surface owns the background. */}
 			<style>{`.article-code .shiki{margin:0;padding:16px 18px;overflow-x:auto;line-height:1.65;background:transparent !important;font-family:var(--font-mono);font-size:13px}
 .article-code .shiki code{font-family:inherit;background:transparent;padding:0}`}</style>
 
 			{/* Header — brand mark left, GitHub pill right (glass nav type). */}
-			<header className="sticky top-4 z-10 flex w-full items-center justify-between rounded-[10px] bg-white/80 backdrop-blur-[12px]">
+			<header className="sticky top-4 z-10 flex w-full items-center justify-between rounded-[10px]">
 				<a
 					href="https://outpacestudios.com"
 					target="_blank"
@@ -414,69 +419,6 @@ export function AudioContent({
 					))}
 				</div>
 
-				{/* Settings */}
-				<div
-					ref={settingsRef}
-					className="mt-2 flex flex-wrap items-center gap-x-8 gap-y-4 rounded-[16px] bg-(--surface) px-5 py-4"
-				>
-					<label className="flex cursor-pointer select-none items-center gap-2.5 text-sm text-(--muted)">
-						<input
-							type="checkbox"
-							checked={enabled}
-							onChange={(e) => {
-								const on = e.target.checked;
-								if (on) {
-									setEnabled(true);
-									toggle("on");
-								} else {
-									// Scheduled before the switch lands, so off gets the
-									// last word.
-									toggle("off");
-									setEnabled(false);
-								}
-							}}
-						/>
-						sound
-					</label>
-					<label className="flex min-w-56 flex-1 items-center gap-4">
-						<span className="text-sm text-(--muted)">volume</span>
-						<input
-							type="range"
-							min={0}
-							max={100}
-							value={Math.round(volume * 100)}
-							onChange={(e) => {
-								const v = +e.target.value / 100;
-								const rising = v > volume;
-								setVolume(v);
-								// Detent blips at the new level: you hear the volume
-								// you are setting. Throttled so a drag ticks.
-								const now = performance.now();
-								if (now - volumeTick.current > 90) {
-									volumeTick.current = now;
-									nudge(rising ? "up" : "down");
-								}
-							}}
-							className="max-w-64 flex-1"
-						/>
-						<output className="w-12 text-right font-mono text-[13px] tabular-nums text-(--ink)">
-							{Math.round(volume * 100)}%
-						</output>
-					</label>
-					<label className="flex items-center gap-3">
-						<span className="text-sm text-(--muted)">voice</span>
-						<input
-							type="text"
-							value={seed}
-							onChange={(e) => setSeed(e.target.value)}
-							spellCheck={false}
-							autoComplete="off"
-							placeholder="Type any seed…"
-							className="w-40 rounded-[6px] bg-(--chip) px-2.5 py-1.5 font-mono text-[13px] text-(--ink) placeholder:text-(--muted)"
-						/>
-					</label>
-	
-				</div>
 			</motion.section>
 
 			{/* ── the article: 1080 container holding the 640 column + TOC ── */}
@@ -558,15 +500,13 @@ export function AudioContent({
 								The property tests sample a hundred seeded voices and hold
 								every invariant against each one: pairs still mirror, the tap
 								is still percussion, deny still sits low, nothing runs long.
-								Type a seed in the playground and watch the drawings redraw as
-								the set retunes.
 							</P>
 						</Col>
 					</section>
 
 					<section id="synthesis" style={SECTION}>
 						<Col>
-							<H2>One instrument, struck six ways</H2>
+							<H2>One instrument, struck fifteen ways</H2>
 							<P>
 								Every sound here is the same physical event: a strike. A
 								strike has two parts. The contact is a few milliseconds of

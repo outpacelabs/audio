@@ -11,9 +11,9 @@ importers:
       '@outpacelabs/audio':
         specifier: workspace:*
         version: link:packages/audio
-      '@outpacelabs/squircle':
-        specifier: github:outpacelabs/smooth#path:packages/squircle
-        version: https://codeload.github.com/outpacelabs/smooth/tar.gz/02ca1e2330ce86d70bbac36c22a1da8a34f321e5#path:packages/squircle(react@19.2.4)
+      '@outpacelabs/smooth':
+        specifier: github:outpacelabs/smooth#path:packages/smooth
+        version: https://codeload.github.com/outpacelabs/smooth/tar.gz/0a1acf5ab80ac6b4e26dc0414b4a6ce5e922fd80#path:packages/smooth(react@19.2.4)
       geist:
         specifier: ^1.7.2
         version: 1.7.2(next@16.2.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
@@ -436,8 +436,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@outpacelabs/squircle@https://codeload.github.com/outpacelabs/smooth/tar.gz/02ca1e2330ce86d70bbac36c22a1da8a34f321e5#path:packages/squircle':
-    resolution: {path: packages/squircle, tarball: https://codeload.github.com/outpacelabs/smooth/tar.gz/02ca1e2330ce86d70bbac36c22a1da8a34f321e5}
+  '@outpacelabs/smooth@https://codeload.github.com/outpacelabs/smooth/tar.gz/0a1acf5ab80ac6b4e26dc0414b4a6ce5e922fd80#path:packages/smooth':
+    resolution: {path: packages/smooth, tarball: https://codeload.github.com/outpacelabs/smooth/tar.gz/0a1acf5ab80ac6b4e26dc0414b4a6ce5e922fd80}
     version: 0.2.1
     peerDependencies:
       react: '>=18'
@@ -1471,7 +1471,7 @@ snapshots:
   '@next/swc-win32-x64-msvc@16.2.6':
     optional: true
 
-  '@outpacelabs/squircle@https://codeload.github.com/outpacelabs/smooth/tar.gz/02ca1e2330ce86d70bbac36c22a1da8a34f321e5#path:packages/squircle(react@19.2.4)':
+  '@outpacelabs/smooth@https://codeload.github.com/outpacelabs/smooth/tar.gz/0a1acf5ab80ac6b4e26dc0414b4a6ce5e922fd80#path:packages/smooth(react@19.2.4)':
     optionalDependencies:
       react: 19.2.4
 
