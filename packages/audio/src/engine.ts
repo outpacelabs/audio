@@ -12,6 +12,7 @@
  */
 
 import { duration, type Layer, type SoundSpec } from "./specs";
+import { type Voice, voiceFor } from "./voice";
 
 interface Settings {
 	enabled: boolean;
@@ -92,6 +93,29 @@ export function hydrate() {
 	) {
 		for (const fn of listeners) fn();
 	}
+}
+
+let currentVoice: Voice | null = null;
+
+/**
+ * Set the app's voice: a seed (any string or number) derives it
+ * deterministically, a Voice object applies as-is, null returns to the
+ * base sound set. Affects the convenience functions (tap, nudge, ...);
+ * explicit play(spec) calls are never re-voiced.
+ */
+export function setVoice(voice: string | number | Voice | null) {
+	currentVoice =
+		voice == null
+			? null
+			: typeof voice === "object"
+				? voice
+				: voiceFor(voice);
+	for (const fn of listeners) fn();
+}
+
+/** The active voice, if one is set. */
+export function getVoice(): Voice | null {
+	return currentVoice;
 }
 
 /** Subscribe to settings changes (used by the React hook). */

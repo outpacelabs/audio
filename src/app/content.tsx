@@ -5,11 +5,14 @@ import {
 	deny,
 	duration,
 	nudge,
+	setVoice,
 	type SoundSpec,
 	slide,
 	specs,
 	tap,
 	toggle,
+	type Voice,
+	voiceFor,
 } from "@outpacelabs/audio";
 import { useAudioSettings } from "@outpacelabs/audio/react";
 import { motion, useReducedMotion } from "motion/react";
@@ -153,23 +156,28 @@ function SpecViz({ spec }: { spec: SoundSpec }) {
 	);
 }
 
-const SOUNDS: { label: string; glyph: string; spec: SoundSpec; play: () => void }[] = [
-	{ label: "tap", glyph: "·", spec: specs.tap(), play: tap },
-	{ label: "nudge up", glyph: "↑", spec: specs.nudge("up"), play: () => nudge("up") },
-	{ label: "nudge down", glyph: "↓", spec: specs.nudge("down"), play: () => nudge("down") },
-	{ label: "toggle on", glyph: "●", spec: specs.toggle("on"), play: () => toggle("on") },
-	{ label: "toggle off", glyph: "○", spec: specs.toggle("off"), play: () => toggle("off") },
-	{ label: "slide in", glyph: "→", spec: specs.slide("in"), play: () => slide("in") },
-	{ label: "slide out", glyph: "←", spec: specs.slide("out"), play: () => slide("out") },
-	{ label: "confirm", glyph: "✓", spec: specs.confirm(), play: confirm },
-	{ label: "deny", glyph: "✕", spec: specs.deny(), play: deny },
-];
+function soundsFor(
+	voice?: Voice,
+): { label: string; glyph: string; spec: SoundSpec; play: () => void }[] {
+	return [
+		{ label: "tap", glyph: "·", spec: specs.tap(voice), play: tap },
+		{ label: "nudge up", glyph: "↑", spec: specs.nudge("up", voice), play: () => nudge("up") },
+		{ label: "nudge down", glyph: "↓", spec: specs.nudge("down", voice), play: () => nudge("down") },
+		{ label: "toggle on", glyph: "●", spec: specs.toggle("on", voice), play: () => toggle("on") },
+		{ label: "toggle off", glyph: "○", spec: specs.toggle("off", voice), play: () => toggle("off") },
+		{ label: "slide in", glyph: "→", spec: specs.slide("in", voice), play: () => slide("in") },
+		{ label: "slide out", glyph: "←", spec: specs.slide("out", voice), play: () => slide("out") },
+		{ label: "confirm", glyph: "✓", spec: specs.confirm(voice), play: confirm },
+		{ label: "deny", glyph: "✕", spec: specs.deny(voice), play: deny },
+	];
+}
 
 /* ── table of contents (glass, right gutter) ── */
 const TOC: { id: string; label: string }[] = [
 	{ id: "playground", label: "Playground" },
 	{ id: "direction", label: "Sound is a direction" },
 	{ id: "data", label: "Sounds as data" },
+	{ id: "voice", label: "A voice from a seed" },
 	{ id: "synthesis", label: "The synthesis" },
 	{ id: "restraint", label: "Restraint" },
 ];
@@ -252,6 +260,12 @@ export function AudioContent({
 }) {
 	const reduced = useReducedMotion() ?? false;
 	const { enabled, volume, setEnabled, setVolume } = useAudioSettings();
+	const [seed, setSeed] = useState("");
+	const voice = seed ? voiceFor(seed) : undefined;
+	useEffect(() => {
+		setVoice(seed || null);
+	}, [seed]);
+	const sounds = soundsFor(voice);
 
 	const reveal = (delay: number) => ({
 		initial: reduced ? false : { opacity: 0, y: 12 },
@@ -325,7 +339,7 @@ export function AudioContent({
 				{...reveal(0.08)}
 			>
 				<div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-					{SOUNDS.map((s) => (
+					{sounds.map((s) => (
 						<motion.button
 							key={s.label}
 							type="button"
@@ -375,6 +389,18 @@ export function AudioContent({
 						<output className="w-12 text-right font-mono text-[13px] tabular-nums text-(--ink)">
 							{Math.round(volume * 100)}%
 						</output>
+					</label>
+					<label className="flex items-center gap-3">
+						<span className="text-sm text-(--muted)">voice</span>
+						<input
+							type="text"
+							value={seed}
+							onChange={(e) => setSeed(e.target.value)}
+							spellCheck={false}
+							autoComplete="off"
+							placeholder="Type any seed…"
+							className="w-40 rounded-[6px] bg-(--chip) px-2.5 py-1.5 font-mono text-[13px] text-(--ink) placeholder:text-(--muted)"
+						/>
 					</label>
 					<span className="font-mono text-[11px] text-(--muted)">
 						persisted · silent under prefers-reduced-motion
@@ -430,6 +456,30 @@ export function AudioContent({
 								going red.
 							</P>
 							<Code html={highlighted.usage} />
+						</Col>
+					</section>
+
+					<section id="voice" style={SECTION}>
+						<Col>
+							<H2>A voice from a seed</H2>
+							<P>
+								Our avatars engine derives a deterministic gradient from any
+								seed. The same idea works for sound. <C>setVoice(seed)</C>{" "}
+								hashes any string or number into a voice: a register shift of
+								a few semitones, a timbre (sine or triangle), a brightness for
+								the percussive filters, and a pace. The whole sound set
+								re-renders in that voice, so a product can own its own sound
+								the way it owns a color, and two products built on this
+								library will not sound like each other.
+							</P>
+							<P>
+								A voice changes how the sounds speak, never what they say.
+								The property tests sample a hundred seeded voices and assert
+								every invariant on each one: pairs still mirror, the tap is
+								still percussion, deny still sits low and soft, nothing
+								exceeds 180ms. Try it in the playground: type a seed and the
+								drawings redraw as the sounds retune.
+							</P>
 						</Col>
 					</section>
 

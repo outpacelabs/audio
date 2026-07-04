@@ -9,7 +9,7 @@
  *  - deny informs, it does not punish: low register, no square/sawtooth
  *  - determinism: the same call always produces the same spec
  */
-import { duration, specs } from "../dist/index.js";
+import { duration, specs, voiceFor } from "../dist/index.js";
 
 let failures = 0;
 const check = (name, ok, detail = "") => {
@@ -107,6 +107,68 @@ for (const [name, make] of [
 	["confirm", () => specs.confirm()],
 ]) {
 	check(`${name} · deterministic`, JSON.stringify(make()) === JSON.stringify(make()));
+}
+
+// Voices: a deterministic identity from a seed. The invariants above must
+// hold for EVERY voice, so sample many seeds and re-assert the load-bearing
+// ones on the voiced sound set.
+{
+	const seeds = Array.from({ length: 100 }, (_, i) => `seed-${i * 7919}`);
+	let allHold = true;
+	const distinct = new Set();
+	for (const seed of seeds) {
+		const v = voiceFor(seed);
+		distinct.add(JSON.stringify(v));
+
+		// Derivation is deterministic and in range.
+		if (JSON.stringify(v) !== JSON.stringify(voiceFor(seed))) allHold = false;
+		if (!(Number.isInteger(v.register) && v.register >= -4 && v.register <= 4)) allHold = false;
+		if (!(v.brightness >= 0.85 && v.brightness <= 1.25)) allHold = false;
+		if (!(v.pace >= 0.85 && v.pace <= 1.05)) allHold = false;
+
+		const voicedAll = [
+			specs.tap(v),
+			specs.nudge("up", v),
+			specs.nudge("down", v),
+			specs.toggle("on", v),
+			specs.toggle("off", v),
+			specs.slide("in", v),
+			specs.slide("out", v),
+			specs.confirm(v),
+			specs.deny(v),
+		];
+		for (const spec of voicedAll) {
+			if (duration(spec) > 0.18) allHold = false;
+			if (!spec.layers.every((l) => l.peak > 0 && l.peak <= 0.9)) allHold = false;
+			if (!spec.layers.every((l) => l.from >= 60 && l.from <= 8000 && l.to >= 60 && l.to <= 8000)) allHold = false;
+		}
+
+		// The tap stays true percussion in every voice.
+		const [click] = specs.tap(v).layers;
+		if (!(click.from >= 3000 && click.from <= 6000 && click.q >= 2 && click.q <= 5)) allHold = false;
+
+		// Direction still mirrors in every voice.
+		const up = specs.nudge("up", v).layers[0];
+		const down = specs.nudge("down", v).layers[0];
+		if (!(up.to > up.from && down.to < down.from)) allHold = false;
+		const on = specs.toggle("on", v).layers;
+		const off = specs.toggle("off", v).layers;
+		if (!(on[1].from > on[0].from && off[1].from < off[0].from)) allHold = false;
+
+		// deny stays low and soft in every voice.
+		const [denyTone] = specs.deny(v).layers;
+		if (!(denyTone.from <= 330 && denyTone.wave === "sine" && denyTone.peak <= 0.6)) allHold = false;
+	}
+	check("voices · every invariant holds across 100 seeded voices", allHold);
+	check("voices · seeds actually differentiate (>60 distinct of 100)", distinct.size > 60, `${distinct.size}`);
+	check(
+		"voices · no voice reproduces another seed's spec byte-for-byte by accident",
+		JSON.stringify(specs.confirm(voiceFor("acme"))) !== JSON.stringify(specs.confirm(voiceFor("globex"))),
+	);
+	check(
+		"voices · unvoiced specs unchanged (base set is stable)",
+		JSON.stringify(specs.tap()) === JSON.stringify({ name: "tap", layers: [{ kind: "noise", from: 4200, to: 4200, q: 3, at: 0, duration: 0.01, peak: 0.8 }] }),
+	);
 }
 
 console.log(failures === 0 ? "\nALL PROPERTY CHECKS PASS" : `\n${failures} FAILURES`);

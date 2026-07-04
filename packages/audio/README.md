@@ -57,6 +57,28 @@ import { useAudioSettings } from "@outpacelabs/audio/react";
 const { enabled, volume, setEnabled, setVolume } = useAudioSettings();
 ```
 
+## A voice from a seed
+
+Any string or number deterministically derives a voice (a register shift,
+a timbre, a brightness, a pace) and the whole sound set re-renders in it.
+A product can own its sound the way it owns a color; two products built on
+this library will not sound like each other.
+
+```ts
+import { setVoice, voiceFor } from "@outpacelabs/audio";
+
+setVoice("acme.com");   // every sound now speaks in acme's voice
+setVoice(null);         // back to the base set
+
+voiceFor("acme.com");   // the pure derivation, for inspection/testing
+// { register: 1, wave: "sine", brightness: 0.98, pace: 0.86 }
+```
+
+A voice changes how the sounds speak, never what they say: the property
+tests sample a hundred seeded voices and assert every invariant on each
+one (pairs mirror, the tap stays percussion, deny stays low and soft,
+nothing exceeds 180ms).
+
 ## Sounds as data
 
 Every sound is a spec: a few numbers describing tones and noise bursts.
