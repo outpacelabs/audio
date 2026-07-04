@@ -97,7 +97,8 @@ const GithubMark = () => (
 
 /* ── labs switcher: the sibling sites, favicon and all. Each row loads the
       live /icon.png straight from the sibling, so there is nothing to copy
-      around when a favicon changes. ── */
+      around when a favicon changes. Hidden for now — flip to re-enable. ── */
+const SHOW_MORE_MENU = false;
 const LABS = [
 	{ name: "avatars", href: "https://avatars.outpacestudios.com" },
 	{ name: "smooth", href: "https://smooth.outpacestudios.com" },
@@ -494,7 +495,7 @@ export function AudioContent({
 						<GithubMark />
 						GitHub
 					</a>
-					<LabsMenu />
+					{SHOW_MORE_MENU && <LabsMenu />}
 				</div>
 			</header>
 
