@@ -1,6 +1,6 @@
 {
 	"name": "@outpacelabs/audio",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Interface sounds with a sense of direction. Tiny procedural UI sounds, synthesized from pure data specs, no audio files.",
 	"keywords": [
 		"audio",
@@ -46,7 +46,8 @@
 		"dev": "tsup --watch",
 		"typecheck": "tsc --noEmit",
 		"test": "pnpm build && node test/properties.mjs",
-		"prepublishOnly": "pnpm test"
+		"prepublishOnly": "pnpm test",
+		"prepare": "tsup"
 	},
 	"peerDependencies": {
 		"react": ">=18"
