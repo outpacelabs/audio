@@ -5,3 +5,7 @@ dist
 .DS_Store
 next-env.d.ts
 .vercel
+
+# Local environment variables (never commit secrets)
+.env*
+!.env.example
