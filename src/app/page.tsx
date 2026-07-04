@@ -20,11 +20,11 @@ form.submit().then(confirm).catch(deny);`,
 specs.nudge("up");
 // {
 //   name: "nudge-up",
-//   layers: [{ kind: "tone", wave: "sine", from: 523.25, to: 659.25,
-//              at: 0, duration: 0.05, peak: 0.5 }],
+//   layers: [{ kind: "noise", from: 2600, to: 3400, q: 3.5,
+//              at: 0, duration: 0.035, peak: 0.55 }],
 // }
 
-duration(specs.confirm()); // 0.17 — nothing exceeds 0.18s`,
+duration(specs.confirm()); // 0.074 — nothing exceeds 0.18s`,
 	},
 	envelope: {
 		lang: "ts",

@@ -62,7 +62,10 @@ export function duration(spec: SoundSpec): number {
 	return spec.layers.reduce((max, l) => Math.max(max, l.at + l.duration), 0);
 }
 
-/* A soft pentatonic-ish register keeps intervals consonant across sounds. */
+/* Low anchors: UI sounds inflect, they don't sing. Tonal layers sit in the
+ * third/fourth octave; anything melodic-bright reads as a jingle. */
+const G3 = 196;
+const E4 = 329.63;
 const G4 = 392;
 const C5 = 523.25;
 const E5 = 659.25;
@@ -122,15 +125,16 @@ export function tap(voice?: Voice): SoundSpec {
 
 /**
  * nudge — one small step of an adjustment (stepper, slider detent, keyboard
- * increment). A short glide whose pitch direction is the step direction.
+ * increment). A detent tick: a short noise transient whose filter sweeps
+ * brighter for up and duller for down. Mechanical, not melodic.
  */
 export function nudge(direction: VerticalDirection, voice?: Voice): SoundSpec {
-	const [from, to] = direction === "up" ? [C5, E5] : [E5, C5];
+	const [from, to] = direction === "up" ? [2600, 3400] : [3400, 2600];
 	return voiced(
 		{
 		name: `nudge-${direction}`,
 		layers: [
-			{ kind: "tone", wave: "sine", from, to, at: 0, duration: 0.05, peak: 0.5 },
+			{ kind: "noise", from, to, q: 3.5, at: 0, duration: 0.035, peak: 0.55 },
 		],
 		},
 		voice,
@@ -138,17 +142,19 @@ export function nudge(direction: VerticalDirection, voice?: Voice): SoundSpec {
 }
 
 /**
- * toggle — a binary state change. Two quick notes; the interval ascends for
- * on and descends for off, so the pair reads as one gesture reversed.
+ * toggle — a binary state change. A physical click-clack: two short ticks,
+ * the second brighter for on and duller for off, with a low body under the
+ * second tick so the latch has weight.
  */
 export function toggle(state: ToggleState, voice?: Voice): SoundSpec {
-	const [first, second] = state === "on" ? [G4, C5 * 1.122] : [C5 * 1.122, G4];
+	const [first, second] = state === "on" ? [2200, 3000] : [3000, 2200];
 	return voiced(
 		{
 		name: `toggle-${state}`,
 		layers: [
-			{ kind: "tone", wave: "triangle", from: first, to: first, at: 0, duration: 0.045, peak: 0.42 },
-			{ kind: "tone", wave: "triangle", from: second, to: second, at: 0.055, duration: 0.055, peak: 0.46 },
+			{ kind: "noise", from: first, to: first, q: 3, at: 0, duration: 0.012, peak: 0.5 },
+			{ kind: "noise", from: second, to: second, q: 3, at: 0.05, duration: 0.014, peak: 0.55 },
+			{ kind: "tone", wave: "sine", from: G3, to: G3, at: 0.05, duration: 0.03, peak: 0.22 },
 		],
 		},
 		voice,
@@ -165,7 +171,7 @@ export function slide(direction: SpatialDirection, voice?: Voice): SoundSpec {
 		{
 		name: `slide-${direction}`,
 		layers: [
-			{ kind: "noise", from, to, q: 2.5, at: 0, duration: 0.09, peak: 0.35 },
+			{ kind: "noise", from, to, q: 2.5, at: 0, duration: 0.07, peak: 0.3 },
 		],
 		},
 		voice,
@@ -173,17 +179,17 @@ export function slide(direction: SpatialDirection, voice?: Voice): SoundSpec {
 }
 
 /**
- * confirm — an outcome worth marking (submitted, saved, copied at the end of
- * a flow). A rising major third with a soft percussive onset.
+ * confirm — an outcome worth marking (submitted, saved, copied at the end
+ * of a flow). A damped pop: a noise transient with one brief, low tonal
+ * inflection rising underneath. An upward nod, not a jingle.
  */
 export function confirm(voice?: Voice): SoundSpec {
 	return voiced(
 		{
 		name: "confirm",
 		layers: [
-			{ kind: "noise", from: 3800, to: 3800, q: 3, at: 0, duration: 0.008, peak: 0.35 },
-			{ kind: "tone", wave: "triangle", from: C5, to: C5, at: 0, duration: 0.07, peak: 0.5 },
-			{ kind: "tone", wave: "triangle", from: E5, to: E5, at: 0.07, duration: 0.1, peak: 0.5 },
+			{ kind: "noise", from: 3400, to: 3400, q: 3, at: 0, duration: 0.008, peak: 0.4 },
+			{ kind: "tone", wave: "sine", from: E4, to: G4, at: 0.004, duration: 0.07, peak: 0.4 },
 		],
 		},
 		voice,
@@ -191,15 +197,16 @@ export function confirm(voice?: Voice): SoundSpec {
 }
 
 /**
- * deny — something didn't happen. One low tone with a slight downward bend:
- * unmistakable, but it informs rather than punishes. No buzzer.
+ * deny — something didn't happen. A low, damped thud: a soft attack and one
+ * low tone bending downward. It informs; it does not punish. No buzzer.
  */
 export function deny(voice?: Voice): SoundSpec {
 	return voiced(
 		{
 		name: "deny",
 		layers: [
-			{ kind: "tone", wave: "sine", fixed: true, from: 220, to: 196, at: 0, duration: 0.12, peak: 0.5 },
+			{ kind: "tone", wave: "sine", fixed: true, from: 196, to: 174.61, at: 0, duration: 0.09, peak: 0.45 },
+			{ kind: "noise", from: 900, to: 900, q: 2, at: 0, duration: 0.01, peak: 0.2 },
 		],
 		},
 		voice,

@@ -30,7 +30,7 @@ tap();                 // neutral percussive click
 nudge("up");           // one step of an adjustment; "down" mirrors it
 toggle("on");          // binary state change; "off" reverses the interval
 slide("in");           // something entering the stage; "out" leaves it
-confirm();             // an outcome worth marking: a rising major third
+confirm();             // an outcome worth marking: a pop with an upward nod
 deny();                // something didn't happen: one low tone, no buzzer
 ```
 
@@ -92,11 +92,11 @@ deny sits low and soft.
 import { specs, duration, play } from "@outpacelabs/audio";
 
 specs.nudge("up");
-// { name: "nudge-up", layers: [{ kind: "tone", wave: "sine",
-//   from: 523.25, to: 659.25, at: 0, duration: 0.05, peak: 0.5 }] }
+// { name: "nudge-up", layers: [{ kind: "noise", from: 2600, to: 3400,
+//   q: 3.5, at: 0, duration: 0.035, peak: 0.55 }] }
 
 play(specs.confirm());       // specs are playable directly
-duration(specs.confirm());   // 0.17
+duration(specs.confirm());   // 0.074
 ```
 
 ## When to play sound at all

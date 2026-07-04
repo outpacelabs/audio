@@ -81,13 +81,13 @@ for (const spec of all) {
 		slideIn.from === slideOut.to && slideIn.to === slideOut.from,
 	);
 
-	const confirmTones = specs.confirm().layers.filter((l) => l.kind === "tone");
-	check("confirm · notes ascend", confirmTones[1].from > confirmTones[0].from);
+	const [confirmTone] = specs.confirm().layers.filter((l) => l.kind === "tone");
+	check("confirm · inflection rises", confirmTone.to > confirmTone.from);
 	const [denyTone] = specs.deny().layers;
 	check("deny · bends down", denyTone.to < denyTone.from);
 	check(
 		"confirm/deny · registers oppose",
-		denyTone.from < Math.min(...confirmTones.map((l) => l.from)),
+		denyTone.from < confirmTone.from,
 	);
 }
 
