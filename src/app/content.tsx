@@ -266,7 +266,7 @@ function SpecViz({ spec }: { spec: SoundSpec }) {
 			height={H}
 			className="block"
 		>
-			<title>{spec.name} envelope</title>
+			<title>{`${spec.name} envelope`}</title>
 			{spec.layers.map((l, i) => (
 				<line
 					key={`${spec.name}-${i}`}
