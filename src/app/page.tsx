@@ -24,7 +24,7 @@ specs.nudge("up");
 //              at: 0, duration: 0.035, peak: 0.55 }],
 // }
 
-duration(specs.confirm()); // 0.074 — nothing exceeds 0.18s`,
+duration(specs.confirm()); // 0.074, nothing exceeds 0.18s`,
 	},
 	envelope: {
 		lang: "ts",

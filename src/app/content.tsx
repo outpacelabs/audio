@@ -462,9 +462,7 @@ export function AudioContent({
 							className="w-40 rounded-[6px] bg-(--chip) px-2.5 py-1.5 font-mono text-[13px] text-(--ink) placeholder:text-(--muted)"
 						/>
 					</label>
-					<span className="font-mono text-[11px] text-(--muted)">
-						persisted · silent under prefers-reduced-motion
-					</span>
+	
 				</div>
 			</motion.section>
 
