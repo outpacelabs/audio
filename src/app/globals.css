@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@theme inline {
+	--font-sans:
+		var(--font-display), -apple-system, "Helvetica Neue", system-ui,
+		sans-serif;
+	--font-mono:
+		var(--font-geist-mono), ui-monospace, "SF Mono", SFMono-Regular, Menlo,
+		Consolas, monospace;
+}
+
+:root {
+	/* Glass article ink scale. */
+	--ink: rgba(23, 23, 23, 0.92);
+	--body: rgba(23, 23, 23, 0.62);
+	--muted: rgba(23, 23, 23, 0.42);
+	--surface: rgba(23, 23, 23, 0.04);
+	--chip: rgba(23, 23, 23, 0.05);
+	--shape: #0b0e13;
+}
+
+html,
+body {
+	margin: 0;
+}
+
+body {
+	background: #fff;
+	color: var(--body);
+	font-family: var(--font-sans);
+	-webkit-font-smoothing: antialiased;
+	font-synthesis: none;
+}
+
+/* Brand-tinted selection instead of the default blue (glass exact). */
+::selection {
+	background: rgba(255, 69, 2, 0.22);
+}
+
+/* Focus: nothing on mouse, a soft ink ring on keyboard focus. */
+:focus {
+	outline: none;
+}
+:focus-visible {
+	outline: 2px solid rgba(0, 0, 0, 0.45);
+	outline-offset: 2px;
+}
+
+/* Quiet sliders: 2px ink track, small ink thumb — no accent-color. */
+input[type="range"] {
+	appearance: none;
+	-webkit-appearance: none;
+	height: 12px;
+	background: transparent;
+	cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+	height: 2px;
+	border-radius: 1px;
+	background: rgba(23, 23, 23, 0.12);
+}
+input[type="range"]::-webkit-slider-thumb {
+	appearance: none;
+	-webkit-appearance: none;
+	margin-top: -5px;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: #171717;
+}
+input[type="range"]::-moz-range-track {
+	height: 2px;
+	border-radius: 1px;
+	background: rgba(23, 23, 23, 0.12);
+}
+input[type="range"]::-moz-range-thumb {
+	width: 12px;
+	height: 12px;
+	border: none;
+	border-radius: 50%;
+	background: #171717;
+}
+
+input[type="checkbox"] {
+	accent-color: #171717;
+}
