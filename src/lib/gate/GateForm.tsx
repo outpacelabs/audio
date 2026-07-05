@@ -1,5 +1,6 @@
 "use client";
 
+import { useSmoothCorners } from "@outpacelabs/smooth/react";
 import { type FormEvent, useState } from "react";
 
 export interface GateFormProps {
@@ -7,23 +8,38 @@ export interface GateFormProps {
 	action?: string;
 	/** Where to send the user after a correct password. Default "/". */
 	next?: string;
-	/** Optional heading text. */
-	title?: string;
 }
 
+// One field, no card, no shadow. Fill matches the app's block surface
+// (rgba(23,23,23,0.04)); corners are Apple-squircle via @outpacelabs/smooth.
+// Scoped + dependency-light so it renders the same in any app. Light + dark.
+const CSS = `
+.og-gate-root{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;background:#fff;color:rgba(23,23,23,0.92);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.og-gate-form{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:300px;text-align:center}
+.og-gate-input{width:100%;box-sizing:border-box;border:none;border-radius:14px;background:rgba(23,23,23,0.04);color:rgba(23,23,23,0.92);padding:14px 16px;font-size:14px;line-height:1.4;text-align:center;outline:none;transition:background-color 120ms ease}
+.og-gate-input::placeholder{color:rgba(23,23,23,0.32)}
+.og-gate-input:focus{background:rgba(23,23,23,0.07)}
+.og-gate-input:disabled{opacity:0.6}
+.og-gate-input[aria-invalid="true"]{background:rgba(180,35,24,0.09);color:#b42318}
+.og-gate-error{font-size:12.5px;line-height:1.4;color:#b42318;margin:0}
+@media (prefers-color-scheme:dark){
+.og-gate-root{background:#1B1C1E;color:rgba(255,255,255,0.92)}
+.og-gate-input{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.92)}
+.og-gate-input::placeholder{color:rgba(255,255,255,0.32)}
+.og-gate-input:focus{background:rgba(255,255,255,0.10)}
+}
+`;
+
 /**
- * Minimal password prompt. Inline styles only, so it renders identically in any
- * app regardless of its CSS setup. Posts to the /api/gate route, then hard-
- * navigates to `next` so middleware re-runs and sees the fresh cookie.
+ * Single-field password prompt. Submits on Enter (no button). Posts to
+ * /api/gate, then hard-navigates to `next` so middleware re-runs against the
+ * fresh cookie.
  */
-export function GateForm({
-	action = "/api/gate",
-	next = "/",
-	title = "This site is private",
-}: GateFormProps) {
+export function GateForm({ action = "/api/gate", next = "/" }: GateFormProps) {
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const inputRef = useSmoothCorners<HTMLInputElement>(14, 60);
 
 	async function onSubmit(e: FormEvent) {
 		e.preventDefault();
@@ -49,33 +65,17 @@ export function GateForm({
 	}
 
 	return (
-		<main
-			style={{
-				minHeight: "100dvh",
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "center",
-				padding: "24px",
-				fontFamily: "system-ui, -apple-system, sans-serif",
-				color: "#171717",
-			}}
-		>
-			<form
-				onSubmit={onSubmit}
-				style={{
-					display: "flex",
-					flexDirection: "column",
-					gap: 12,
-					width: "100%",
-					maxWidth: 320,
-					textAlign: "center",
-				}}
-			>
-				<h1 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>{title}</h1>
+		<main className="og-gate-root">
+			{/* biome-ignore lint/security/noDangerouslySetInnerHtml: static scoped stylesheet */}
+			<style dangerouslySetInnerHTML={{ __html: CSS }} />
+			<form className="og-gate-form" onSubmit={onSubmit}>
 				<input
+					ref={inputRef}
+					className="og-gate-input"
 					type="password"
 					autoFocus
 					required
+					disabled={loading}
 					value={password}
 					onChange={(e) => {
 						setPassword(e.target.value);
@@ -84,37 +84,10 @@ export function GateForm({
 					placeholder="Password"
 					aria-label="Password"
 					aria-invalid={error}
-					style={{
-						height: 44,
-						borderRadius: 10,
-						border: `1px solid ${error ? "#b42318" : "rgba(23,23,23,0.14)"}`,
-						padding: "0 14px",
-						fontSize: 14,
-						outline: "none",
-						width: "100%",
-						boxSizing: "border-box",
-					}}
 				/>
-				<button
-					type="submit"
-					disabled={loading}
-					style={{
-						height: 44,
-						borderRadius: 10,
-						border: "none",
-						background: "#171717",
-						color: "#fff",
-						fontSize: 14,
-						fontWeight: 550,
-						cursor: loading ? "default" : "pointer",
-						opacity: loading ? 0.6 : 1,
-					}}
-				>
-					{loading ? "…" : "Enter"}
-				</button>
 				{error && (
-					<p style={{ color: "#b42318", fontSize: 13, margin: 0 }} aria-live="polite">
-						Incorrect password.
+					<p className="og-gate-error" aria-live="polite">
+						Incorrect password. Try again.
 					</p>
 				)}
 			</form>

@@ -8,5 +8,5 @@ export default async function GatePage({
 	searchParams: Promise<{ next?: string }>;
 }) {
 	const { next } = await searchParams;
-	return <GateForm next={next ?? "/"} title="Audio is private for now" />;
+	return <GateForm next={next ?? "/"} />;
 }
