@@ -1,14 +1,15 @@
 import { GeistMono } from "geist/font/mono";
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 // Inter (variable) — continuous weights so 450/550 render exactly, same
 // face the outpacelabs sites use.
-const inter = Inter({
-	subsets: ["latin"],
+const inter = localFont({
+	src: "./fonts/InterVariable.woff2",
 	display: "swap",
 	variable: "--font-display",
+	weight: "100 900",
 });
 
 const TITLE = "Audio | Interface sounds with a sense of direction";
